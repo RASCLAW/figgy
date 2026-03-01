@@ -1,0 +1,66 @@
+{
+  "name": "Send Test Email",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "48c0d629-f411-4a50-be80-0c1cce348dd3",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "sendTo": "sarinasmedia@gmail.com",
+        "subject": "Test Email from FIGGY n8n",
+        "message": "Hello! This is my first automated email sent from n8n and FIGGY.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c0f4cbcc-5549-4bca-8305-b475b1c7bd35",
+      "name": "Send a message",
+      "webhookId": "ed1cd955-eb8a-421e-b121-647043b9edbd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GIeJXuKP2hplZsUX",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "ab380b68-a165-4ac6-bde5-f7b2bfbd8736",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8f5f556501a1bc089acc180bf8210118b142ca69e9a04b407b5e834f5e047cd4"
+  },
+  "id": "lJkfiDUC9gVwpYSy",
+  "tags": []
+}
