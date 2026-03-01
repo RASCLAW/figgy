@@ -1,0 +1,279 @@
+{
+  "name": "Daily Email Briefings — 4 Topics",
+  "nodes": [
+
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 6 * * *" }]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [20, 0],
+      "id": "11111111-1111-1111-1111-111111111101",
+      "name": "AI Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://www.artificialintelligence-news.com/feed/"
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [300, 0],
+      "id": "11111111-1111-1111-1111-111111111102",
+      "name": "AI RSS Feed"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst today = new Date().toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});\nconst top5 = items.slice(0, 5);\n\nconst rows = top5.map((item) => {\n  const title = (item.json.title || 'No title').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');\n  const link = item.json.link || '#';\n  const raw = item.json.contentSnippet || item.json.content || item.json.summary || '';\n  const snippet = raw.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').slice(0, 160);\n  const snippetHtml = snippet ? `<br><span style=\"color:#555;font-size:13px;\">${snippet}\u2026</span>` : '';\n  return `<li style=\"margin-bottom:14px;\"><a href=\"${link}\" style=\"color:#5a67d8;font-weight:bold;text-decoration:none;\">${title}</a>${snippetHtml}</li>`;\n}).join('');\n\nconst emailHtml = `<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f4f4f4;\"><div style=\"max-width:600px;margin:20px auto;font-family:Arial,sans-serif;\"><div style=\"background:linear-gradient(135deg,#667eea,#764ba2);padding:25px 20px;border-radius:8px 8px 0 0;\"><h1 style=\"margin:0;color:#fff;font-size:22px;\">\uD83E\uDD16 AI & Automation Daily Brief</h1><p style=\"margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;\">${today}</p></div><div style=\"background:#fff;padding:25px;border:1px solid #ddd;border-top:none;\"><h2 style=\"color:#444;font-size:16px;margin-top:0;border-bottom:2px solid #667eea;padding-bottom:8px;\">\uD83D\uDCF0 Top Headlines</h2><ul style=\"padding-left:18px;color:#333;line-height:1.8;margin:0;\">${rows}</ul><div style=\"background:#f0f4ff;border-left:4px solid #667eea;padding:16px;margin-top:24px;border-radius:0 6px 6px 0;\"><p style=\"margin:0;font-weight:bold;color:#333;\">\uD83D\uDCA1 Today's Actionable Insight</p><p style=\"margin:8px 0 0;color:#555;font-size:14px;line-height:1.6;\">Pick one AI tool from today's headlines and spend 15 minutes exploring how it could replace a repetitive step in your workflow. Write down the estimated time saved \u2014 this becomes your automation ROI proof point when pitching future clients.</p></div></div><div style=\"text-align:center;padding:12px;color:#aaa;font-size:12px;\">Powered by FIGGY \u2022 Automated with n8n</div></div></body></html>`;\n\nreturn [{json: {emailHtml, subject: `\uD83E\uDD16 AI & Automation Brief \u2014 ${today}`}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [580, 0],
+      "id": "11111111-1111-1111-1111-111111111103",
+      "name": "AI Format Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "sarinasmedia@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "bodyContentType": "html",
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [860, 0],
+      "id": "11111111-1111-1111-1111-111111111104",
+      "name": "AI Send Email",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GIeJXuKP2hplZsUX",
+          "name": "Gmail account"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 8 * * *" }]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [20, 480],
+      "id": "22222222-2222-2222-2222-222222222201",
+      "name": "Crypto Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://cointelegraph.com/rss"
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [300, 480],
+      "id": "22222222-2222-2222-2222-222222222202",
+      "name": "Crypto RSS Feed"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst today = new Date().toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});\n\n// Filter for Axie/Ronin items first, fall back to top crypto items\nconst keywords = ['axie', 'ronin', 'sky mavis', 'slp', 'axs', 'nft game', 'play-to-earn', 'play to earn'];\nconst filtered = items.filter((item) => {\n  const text = ((item.json.title || '') + ' ' + (item.json.contentSnippet || '')).toLowerCase();\n  return keywords.some((kw) => text.includes(kw));\n});\nconst source = filtered.length >= 3 ? filtered : items;\nconst top5 = source.slice(0, 5);\n\nconst rows = top5.map((item) => {\n  const title = (item.json.title || 'No title').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');\n  const link = item.json.link || '#';\n  const raw = item.json.contentSnippet || item.json.content || item.json.summary || '';\n  const snippet = raw.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').slice(0, 160);\n  const snippetHtml = snippet ? `<br><span style=\"color:#555;font-size:13px;\">${snippet}\u2026</span>` : '';\n  return `<li style=\"margin-bottom:14px;\"><a href=\"${link}\" style=\"color:#e65c00;font-weight:bold;text-decoration:none;\">${title}</a>${snippetHtml}</li>`;\n}).join('');\n\nconst emailHtml = `<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f4f4f4;\"><div style=\"max-width:600px;margin:20px auto;font-family:Arial,sans-serif;\"><div style=\"background:linear-gradient(135deg,#f57c00,#e65c00);padding:25px 20px;border-radius:8px 8px 0 0;\"><h1 style=\"margin:0;color:#fff;font-size:22px;\">\uD83C\uDFAE Crypto Gaming Brief \u2014 Axie & Ronin</h1><p style=\"margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;\">${today}</p></div><div style=\"background:#fff;padding:25px;border:1px solid #ddd;border-top:none;\"><h2 style=\"color:#444;font-size:16px;margin-top:0;border-bottom:2px solid #e65c00;padding-bottom:8px;\">\uD83D\uDCF0 Top Headlines</h2><ul style=\"padding-left:18px;color:#333;line-height:1.8;margin:0;\">${rows}</ul><div style=\"background:#fff8f0;border-left:4px solid #e65c00;padding:16px;margin-top:24px;border-radius:0 6px 6px 0;\"><p style=\"margin:0;font-weight:bold;color:#333;\">\uD83D\uDCA1 Today's Actionable Insight</p><p style=\"margin:8px 0 0;color:#555;font-size:14px;line-height:1.6;\">Check the Ronin Explorer for today's transaction volume and compare AXS / SLP price movement. If either moved more than 5%, identify the catalyst from today's headlines \u2014 news-driven moves reveal community sentiment and signal the best windows to engage, trade, or rebalance your Axie assets.</p></div></div><div style=\"text-align:center;padding:12px;color:#aaa;font-size:12px;\">Powered by FIGGY \u2022 Automated with n8n</div></div></body></html>`;\n\nreturn [{json: {emailHtml, subject: `\uD83C\uDFAE Crypto Gaming Brief (Axie/Ronin) \u2014 ${today}`}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [580, 480],
+      "id": "22222222-2222-2222-2222-222222222203",
+      "name": "Crypto Format Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "sarinasmedia@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "bodyContentType": "html",
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [860, 480],
+      "id": "22222222-2222-2222-2222-222222222204",
+      "name": "Crypto Send Email",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GIeJXuKP2hplZsUX",
+          "name": "Gmail account"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 10 * * *" }]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [20, 960],
+      "id": "33333333-3333-3333-3333-333333333301",
+      "name": "Toddler Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss/search?q=toddler+parenting+tips+child+development&hl=en-US&gl=US&ceid=US:en"
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [300, 960],
+      "id": "33333333-3333-3333-3333-333333333302",
+      "name": "Toddler RSS Feed"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst today = new Date().toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});\nconst top5 = items.slice(0, 5);\n\nconst rows = top5.map((item) => {\n  const title = (item.json.title || 'No title').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');\n  const link = item.json.link || '#';\n  const raw = item.json.contentSnippet || item.json.content || item.json.summary || '';\n  const snippet = raw.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').slice(0, 160);\n  const snippetHtml = snippet ? `<br><span style=\"color:#555;font-size:13px;\">${snippet}\u2026</span>` : '';\n  return `<li style=\"margin-bottom:14px;\"><a href=\"${link}\" style=\"color:#2e7d32;font-weight:bold;text-decoration:none;\">${title}</a>${snippetHtml}</li>`;\n}).join('');\n\nconst emailHtml = `<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f4f4f4;\"><div style=\"max-width:600px;margin:20px auto;font-family:Arial,sans-serif;\"><div style=\"background:linear-gradient(135deg,#43a047,#1b5e20);padding:25px 20px;border-radius:8px 8px 0 0;\"><h1 style=\"margin:0;color:#fff;font-size:22px;\">\uD83D\uDC76 Toddler Care Daily Tips</h1><p style=\"margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;\">${today}</p></div><div style=\"background:#fff;padding:25px;border:1px solid #ddd;border-top:none;\"><h2 style=\"color:#444;font-size:16px;margin-top:0;border-bottom:2px solid #43a047;padding-bottom:8px;\">\uD83D\uDCF0 Latest Tips & Advice</h2><ul style=\"padding-left:18px;color:#333;line-height:1.8;margin:0;\">${rows}</ul><div style=\"background:#f1f8e9;border-left:4px solid #43a047;padding:16px;margin-top:24px;border-radius:0 6px 6px 0;\"><p style=\"margin:0;font-weight:bold;color:#333;\">\uD83D\uDCA1 Today's Actionable Tip</p><p style=\"margin:8px 0 0;color:#555;font-size:14px;line-height:1.6;\">Try one new sensory activity today \u2014 even playing with dry pasta or ice cubes in a bowl counts. Sensory play boosts toddler language development, fine motor skills, and emotional regulation. Just 10 minutes is enough to make a difference!</p></div></div><div style=\"text-align:center;padding:12px;color:#aaa;font-size:12px;\">Powered by FIGGY \u2022 Automated with n8n</div></div></body></html>`;\n\nreturn [{json: {emailHtml, subject: `\uD83D\uDC76 Toddler Care Tips \u2014 ${today}`}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [580, 960],
+      "id": "33333333-3333-3333-3333-333333333303",
+      "name": "Toddler Format Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "sarinasmedia@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "bodyContentType": "html",
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [860, 960],
+      "id": "33333333-3333-3333-3333-333333333304",
+      "name": "Toddler Send Email",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GIeJXuKP2hplZsUX",
+          "name": "Gmail account"
+        }
+      }
+    },
+
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 12 * * *" }]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [20, 1440],
+      "id": "44444444-4444-4444-4444-444444444401",
+      "name": "Consultant Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://blog.n8n.io/rss/"
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [300, 1440],
+      "id": "44444444-4444-4444-4444-444444444402",
+      "name": "Consultant RSS Feed"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const items = $input.all();\nconst today = new Date().toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'});\nconst top5 = items.slice(0, 5);\n\nconst rows = top5.map((item) => {\n  const title = (item.json.title || 'No title').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');\n  const link = item.json.link || '#';\n  const raw = item.json.contentSnippet || item.json.content || item.json.summary || '';\n  const snippet = raw.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').slice(0, 160);\n  const snippetHtml = snippet ? `<br><span style=\"color:#555;font-size:13px;\">${snippet}\u2026</span>` : '';\n  return `<li style=\"margin-bottom:14px;\"><a href=\"${link}\" style=\"color:#1565c0;font-weight:bold;text-decoration:none;\">${title}</a>${snippetHtml}</li>`;\n}).join('');\n\nconst emailHtml = `<!DOCTYPE html><html><body style=\"margin:0;padding:0;background:#f4f4f4;\"><div style=\"max-width:600px;margin:20px auto;font-family:Arial,sans-serif;\"><div style=\"background:linear-gradient(135deg,#1976d2,#0d47a1);padding:25px 20px;border-radius:8px 8px 0 0;\"><h1 style=\"margin:0;color:#fff;font-size:22px;\">\uD83D\uDCBC AI Automation Consultant Brief</h1><p style=\"margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:14px;\">${today}</p></div><div style=\"background:#fff;padding:25px;border:1px solid #ddd;border-top:none;\"><h2 style=\"color:#444;font-size:16px;margin-top:0;border-bottom:2px solid #1976d2;padding-bottom:8px;\">\uD83D\uDCF0 Industry Insights & Workflow Trends</h2><ul style=\"padding-left:18px;color:#333;line-height:1.8;margin:0;\">${rows}</ul><div style=\"background:#e3f2fd;border-left:4px solid #1976d2;padding:16px;margin-top:24px;border-radius:0 6px 6px 0;\"><p style=\"margin:0;font-weight:bold;color:#333;\">\uD83D\uDCA1 Today's Business-Building Insight</p><p style=\"margin:8px 0 0;color:#555;font-size:14px;line-height:1.6;\">Document one recent automation win with a measurable result \u2014 time saved, errors reduced, or revenue generated. Package it as a single paragraph case study and add it to your portfolio. Concrete proof of ROI beats a sales pitch every time when landing consulting clients.</p></div></div><div style=\"text-align:center;padding:12px;color:#aaa;font-size:12px;\">Powered by FIGGY \u2022 Automated with n8n</div></div></body></html>`;\n\nreturn [{json: {emailHtml, subject: `\uD83D\uDCBC AI Automation Consultant Brief \u2014 ${today}`}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [580, 1440],
+      "id": "44444444-4444-4444-4444-444444444403",
+      "name": "Consultant Format Email"
+    },
+    {
+      "parameters": {
+        "sendTo": "sarinasmedia@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.emailHtml }}",
+        "options": {
+          "bodyContentType": "html",
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [860, 1440],
+      "id": "44444444-4444-4444-4444-444444444404",
+      "name": "Consultant Send Email",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GIeJXuKP2hplZsUX",
+          "name": "Gmail account"
+        }
+      }
+    }
+
+  ],
+  "connections": {
+    "AI Trigger": {
+      "main": [[{ "node": "AI RSS Feed", "type": "main", "index": 0 }]]
+    },
+    "AI RSS Feed": {
+      "main": [[{ "node": "AI Format Email", "type": "main", "index": 0 }]]
+    },
+    "AI Format Email": {
+      "main": [[{ "node": "AI Send Email", "type": "main", "index": 0 }]]
+    },
+    "Crypto Trigger": {
+      "main": [[{ "node": "Crypto RSS Feed", "type": "main", "index": 0 }]]
+    },
+    "Crypto RSS Feed": {
+      "main": [[{ "node": "Crypto Format Email", "type": "main", "index": 0 }]]
+    },
+    "Crypto Format Email": {
+      "main": [[{ "node": "Crypto Send Email", "type": "main", "index": 0 }]]
+    },
+    "Toddler Trigger": {
+      "main": [[{ "node": "Toddler RSS Feed", "type": "main", "index": 0 }]]
+    },
+    "Toddler RSS Feed": {
+      "main": [[{ "node": "Toddler Format Email", "type": "main", "index": 0 }]]
+    },
+    "Toddler Format Email": {
+      "main": [[{ "node": "Toddler Send Email", "type": "main", "index": 0 }]]
+    },
+    "Consultant Trigger": {
+      "main": [[{ "node": "Consultant RSS Feed", "type": "main", "index": 0 }]]
+    },
+    "Consultant RSS Feed": {
+      "main": [[{ "node": "Consultant Format Email", "type": "main", "index": 0 }]]
+    },
+    "Consultant Format Email": {
+      "main": [[{ "node": "Consultant Send Email", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8f5f556501a1bc089acc180bf8210118b142ca69e9a04b407b5e834f5e047cd4"
+  },
+  "tags": []
+}
