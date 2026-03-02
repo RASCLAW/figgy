@@ -1,0 +1,100 @@
+{
+  "name": "DuberyMNL Lead Gen (Webhook Only)",
+  "nodes": [
+    {
+      "id": "w-0001",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "duberymnl-lead",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "w-0002",
+      "name": "Normalize (Webhook)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3,
+      "position": [520, 300],
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            { "id": "a1", "name": "name", "value": "={{ $json.body.name }}", "type": "string" },
+            { "id": "a2", "name": "email", "value": "={{ $json.body.email }}", "type": "string" },
+            { "id": "a3", "name": "contact_number", "value": "={{ $json.body.contact_number }}", "type": "string" },
+            { "id": "a4", "name": "address", "value": "={{ $json.body.address }}", "type": "string" },
+            { "id": "a5", "name": "product_model", "value": "={{ $json.body.product_model }}", "type": "string" },
+            { "id": "a6", "name": "trigger_source", "value": "webhook", "type": "string" }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      }
+    },
+    {
+      "id": "w-0003",
+      "name": "Append to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [820, 300],
+      "parameters": {
+        "operation": "append",
+        "documentId": { "__rl": true, "value": "YOUR_GOOGLE_SHEET_ID", "mode": "id" },
+        "sheetName": { "__rl": true, "value": "Sheet1", "mode": "name" },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toISO() }}",
+            "Name": "={{ $json.name }}",
+            "Email": "={{ $json.email }}",
+            "Contact Number": "={{ $json.contact_number }}",
+            "Address": "={{ $json.address }}",
+            "Product Model": "={{ $json.product_model }}"
+          },
+          "matchingColumns": []
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "w-0004",
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [1100, 300],
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "Thank you for your interest \u2013 DuberyMNL",
+        "emailType": "html",
+        "message": "<!DOCTYPE html>\n<html>\n<body style='margin:0; padding:0; background-color:#f4f4f4; font-family: Arial, Helvetica, sans-serif;'>\n\n<table width='100%' cellpadding='0' cellspacing='0' style='padding:30px 0;'>\n  <tr>\n    <td align='center'>\n\n      <table width='600' cellpadding='0' cellspacing='0' style='background-color:#ffffff; padding:40px; border-radius:8px;'>\n\n        <tr>\n          <td align='center' style='font-size:26px; font-weight:bold; color:#111111;'>\n            DuberyMNL\n          </td>\n        </tr>\n\n        <tr><td height='20'></td></tr>\n\n        <tr>\n          <td align='center'>\n            <img \n              src='https://drive.google.com/uc?export=view&id=1ceq_7AfXcZGVjnkEtxAxcAnZFHiWINe2' \n              alt='DuberyMNL Representative'\n              width='150'\n              style='border-radius:75px; display:block;'\n            />\n          </td>\n        </tr>\n\n        <tr><td height='25'></td></tr>\n\n        <tr>\n          <td style='font-size:16px; line-height:1.6; color:#444444;'>\n            Hello,\n            <br><br>\n            Thank you for your interest in <strong>DuberyMNL</strong>.\n            We have received your inquiry and our team will contact you shortly.\n            <br><br>\n            We&#39;re excited to help you find the perfect pair.\n          </td>\n        </tr>\n\n        <tr><td height='25'></td></tr>\n\n        <tr>\n          <td style='background-color:#111111; color:#ffffff; padding:20px; text-align:center; font-size:16px; font-weight:bold; border-radius:6px;'>\n            \ud83d\udd25 This Month&#39;s Special: Exclusive discounts on selected Dubery models!\n          </td>\n        </tr>\n\n        <tr><td height='30'></td></tr>\n\n        <tr>\n          <td style='font-size:13px; color:#888888; text-align:center;'>\n            DuberyMNL<br>\n            Premium Eyewear | Built for Style & Performance\n          </td>\n        </tr>\n\n      </table>\n\n    </td>\n  </tr>\n</table>\n\n</body>\n</html>",
+        "options": {}
+      }
+    },
+    {
+      "id": "w-0005",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1380, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseCode": 200,
+        "responseBody": "={{ { status: 'success', message: 'Lead received successfully', timestamp: $now.toISO() } }}",
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Normalize (Webhook)", "type": "main", "index": 0 }]] },
+    "Normalize (Webhook)": { "main": [[{ "node": "Append to Google Sheet", "type": "main", "index": 0 }]] },
+    "Append to Google Sheet": { "main": [[{ "node": "Send Confirmation Email", "type": "main", "index": 0 }]] },
+    "Send Confirmation Email": { "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]] }
+  },
+  "active": false
+}
