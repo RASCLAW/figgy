@@ -8,3 +8,5 @@
 
 ## Tooling
 - FIGGY repo is canonical
+- `scripts/figgy-health.sh` is the baseline system health check (Docker, n8n container, volume, /healthz)
+- n8n workflow exports are version-controlled under `n8n-workflows/<project>/`
