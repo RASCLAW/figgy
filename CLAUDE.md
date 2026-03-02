@@ -31,5 +31,7 @@ You are the FIGGY main agent. Your job is to help RA build, maintain, and improv
 - Decisions: memory/DECISIONS.md
 - Stable environment facts: memory/FACTS.md
 - Next actions: memory/BACKLOG.md
+- Operational integrity rules: memory/INTEGRITY.md
+- Frontend design skill: .claude/skills/frontend-design/SKILL.md
 
 

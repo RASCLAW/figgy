@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="DuberyMNL — Premium Eyewear | Built for Style & Performance. COD available in Metro Manila." />
+  <title>DuberyMNL | Premium Eyewear</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- ── NAV ── -->
+  <header class="nav">
+    <div class="nav__inner container">
+      <img src="images/duberymnlLOGO4.png" alt="DuberyMNL" class="nav__logo-img" />
+      <a href="#order" class="btn btn--sm nav__cta">Order Now</a>
+    </div>
+  </header>
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero__inner container">
+      <img src="images/duberymnlLOGO4.png" alt="DuberyMNL" class="hero__logo-img" />
+      <h1 class="visually-hidden">DuberyMNL</h1>
+      <span class="hero__badge">Metro Manila · COD Available</span>
+      <p class="hero__sub">Premium Eyewear | Built for Style &amp; Performance</p>
+      <a href="#products" class="btn btn--primary btn--lg">Shop Now</a>
+    </div>
+  </section>
+
+  <!-- ── PRODUCTS ── -->
+  <section class="products" id="products">
+    <div class="container">
+      <h2 class="section-title">Our Collection</h2>
+      <div class="product-grid">
+
+        <div class="card">
+          <img class="card__img" src="images/Gemini_Generated_Image_7hstqb7hstqb7hst.png" alt="Sky Blue eyewear model" />
+          <div class="card__body">
+            <h3 class="card__name">Sky Blue</h3>
+            <p class="card__tagline">Clear skies, sharper vision.</p>
+            <button class="btn btn--outline" data-model="Sky Blue">Order This</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <img class="card__img" src="images/Gemini_Generated_Image_heaqtuheaqtuheaq.png" alt="Stealth eyewear model" />
+          <div class="card__body">
+            <h3 class="card__name">Stealth</h3>
+            <p class="card__tagline">Low profile. Maximum impact.</p>
+            <button class="btn btn--outline" data-model="Stealth">Order This</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <img class="card__img" src="images/Gemini_Generated_Image_r5ue2jr5ue2jr5ue.png" alt="Fire eyewear model" />
+          <div class="card__body">
+            <h3 class="card__name">Fire</h3>
+            <p class="card__tagline">Bold frames. Fearless look.</p>
+            <button class="btn btn--outline" data-model="Fire">Order This</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <img class="card__img" src="images/Gemini_Generated_Image_y3hq3ry3hq3ry3hq.png" alt="Gold eyewear model" />
+          <div class="card__body">
+            <h3 class="card__name">Gold</h3>
+            <p class="card__tagline">Refined taste. Premium finish.</p>
+            <button class="btn btn--outline" data-model="Gold">Order This</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── WHY COD ── -->
+  <section class="why-cod">
+    <div class="container">
+      <h2 class="section-title">Why Shop With Us?</h2>
+      <ul class="trust-list">
+        <li class="trust-item">
+          <span class="trust-icon" aria-hidden="true">✓</span>
+          <div>
+            <strong>No online payment needed</strong>
+            <p>Pay only when your order arrives at your door.</p>
+          </div>
+        </li>
+        <li class="trust-item">
+          <span class="trust-icon" aria-hidden="true">✓</span>
+          <div>
+            <strong>Fast Metro Manila delivery</strong>
+            <p>We deliver within NCR — quick and reliable.</p>
+          </div>
+        </li>
+        <li class="trust-item">
+          <span class="trust-icon" aria-hidden="true">✓</span>
+          <div>
+            <strong>Authentic premium eyewear</strong>
+            <p>Every pair is quality-checked before shipping.</p>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── ORDER FORM ── -->
+  <section class="order" id="order">
+    <div class="container">
+      <h2 class="section-title">Place Your Order</h2>
+      <p class="order__note">Fill in your details and we'll contact you within 24 hours to confirm.</p>
+
+      <form class="order-form" id="order-form" novalidate>
+
+        <div class="field">
+          <label class="field__label" for="name">Full Name <span class="required">*</span></label>
+          <input
+            class="field__input"
+            type="text"
+            id="name"
+            name="name"
+            placeholder="Juan Dela Cruz"
+            autocomplete="name"
+          />
+          <span class="field__error" id="name-error" role="alert"></span>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="email">Email Address <span class="required">*</span></label>
+          <input
+            class="field__input"
+            type="email"
+            id="email"
+            name="email"
+            placeholder="juan@email.com"
+            autocomplete="email"
+          />
+          <span class="field__error" id="email-error" role="alert"></span>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="contact_number">Contact Number <span class="required">*</span></label>
+          <input
+            class="field__input"
+            type="tel"
+            id="contact_number"
+            name="contact_number"
+            placeholder="09XX XXX XXXX"
+            autocomplete="tel"
+          />
+          <span class="field__error" id="contact_number-error" role="alert"></span>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="address">Complete Address — Metro Manila <span class="required">*</span></label>
+          <textarea
+            class="field__input field__textarea"
+            id="address"
+            name="address"
+            placeholder="Unit/House No., Street, Barangay, City"
+            rows="3"
+            autocomplete="street-address"
+          ></textarea>
+          <span class="field__error" id="address-error" role="alert"></span>
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="product_model">Product Model <span class="required">*</span></label>
+          <select class="field__input field__select" id="product_model" name="product_model">
+            <option value="">— Select a model —</option>
+            <option value="Sky Blue">Sky Blue</option>
+            <option value="Stealth">Stealth</option>
+            <option value="Fire">Fire</option>
+            <option value="Gold">Gold</option>
+          </select>
+          <span class="field__error" id="product_model-error" role="alert"></span>
+        </div>
+
+        <button class="btn btn--primary btn--full" type="submit">Place Order</button>
+
+      </form>
+
+      <div class="success-message" id="success-message" hidden>
+        <span class="success-icon" aria-hidden="true">✓</span>
+        <h3>Order received!</h3>
+        <p>We'll contact you within 24 hours to confirm your order.</p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <a
+        class="footer__fb"
+        href="https://facebook.com/duberymnl"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        facebook.com/duberymnl
+      </a>
+      <p class="footer__note">COD available in Metro Manila only.</p>
+      <p class="footer__copy">&copy; 2026 DuberyMNL. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
