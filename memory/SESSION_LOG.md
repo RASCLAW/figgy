@@ -1,5 +1,40 @@
 # SESSION LOG (Milestone-Based)
 
+## 2026-03-05 — DuberyMNL WF2 Stars-Only Review ✅
+
+### Changes (Objective)
+- Replaced approve/reject radio buttons entirely with 1–5 star rating system
+- 0–2 stars = reject → `rejected_content` sheet
+- 3–5 stars = approve → `approved_content` sheet with Rating column populated
+- Feedback textarea retained — still triggers WF1 regenerate on submit
+
+### Key Technical Patterns
+- Loop index `i` used for all form field names: `data-card="${i}"`, `name="rating_${i}"`, `id="star_val_${i}"`
+  - NOT `d.ID` — test captions without an ID column would make `d.ID = undefined`, causing all cards to share `data-id="undefined"` and rate simultaneously
+- Event delegation: single `document.addEventListener('click', ...)` — no inline onclick handlers
+- "Route by Decision" IF node: `$json.Rating >= 3` (Number Greater Than or Equal To 3) — threshold is 3, not 1
+- `Tag Decisions` still outputs `decision` field (for IF node), but also `Rating: null` for rejects
+
+### Confirmed n8n Behavior (autoMapInputData)
+- `autoMapInputData` writes ALL input fields as columns, including unmatched ones
+- `decision` field → extra column in `approved_content` (no matching header)
+- `Timestamp` header in sheet has trailing space → field mismatch → new column created
+- RA accepted resulting sheet format: `Vibe | Model | Caption | Hashtags | Generated_At | Timestamp | Rating | decision`
+
+### Verified Working
+- Stars render on review page, gold fill on click, label updates to "N stars — approved" ✅
+- 0–2 star captions route to `rejected_content` ✅
+- Rated captions route to `approved_content` with correct Rating value ✅
+- Feedback loop still fires WF1 regenerate ✅
+
+### Deferred
+- WF2 JSON re-exported and saved to `n8n-workflows/duberymnl/duberymnl-caption-approver.json` ✅
+- Add Tavily key → connect to WF1 Agent node
+- Build WF3 (Image Generator) once sufficient approved captions accumulate
+- Use Rating values in WF1 to weight caption generation (future)
+
+---
+
 ## 2026-03-05 — DuberyMNL Caption Agent: Full Pipeline Live ✅
 
 ### Changes (Objective)

@@ -1,9 +1,9 @@
 {
-  "name": "WF2 — DuberyMNL Approval Handler",
+  "name": "DuberyMNL — Caption Approver",
   "nodes": [
     {
       "parameters": {
-        "jsCode": "const body = $input.first().json.body;\n\nconst approved = [];\nconst rejected = [];\n\nfor (const [key, value] of Object.entries(body)) {\n  if (!key.startsWith('caption_')) continue;\n  const id = key.replace('caption_', '');\n  if (value === 'approve') {\n    approved.push(id);\n  } else {\n    rejected.push(id);\n  }\n}\n\nreturn [{ json: { approved, rejected, approvedCount: approved.length, rejectedCount: rejected.length } }];\n"
+        "jsCode": "const body = $input.first().json.body;\nconst ratings = {};\n\nfor (const [key, value] of Object.entries(body)) {\n  if (key.startsWith('rating_')) {\n    const idx = key.replace('rating_', '');\n    ratings[idx] = parseInt(value) || 0;\n  }\n}\n\nreturn [{ json: { ratings } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -65,7 +65,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rows = items;\n\nlet cards = '';\nfor (const row of rows) {\n  const d = row.json;\n  const id = d.ID;\n  cards += `\n    <div style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n      <div style=\"font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px\">${d.Vibe} · ${d.Model}</div>\n      <div style=\"font-size:15px;line-height:1.5;white-space:pre-wrap;margin-bottom:10px\">${d.Caption}</div>\n      <div style=\"font-size:12px;color:#aaa;margin-bottom:12px\">${d.Hashtags}</div>\n      <label style=\"display:inline-flex;align-items:center;gap:6px;margin-right:16px;cursor:pointer\">\n        <input type=\"radio\" name=\"caption_${id}\" value=\"approve\" style=\"accent-color:#16a34a\"> Approve\n      </label>\n      <label style=\"display:inline-flex;align-items:center;gap:6px;cursor:pointer\">\n        <input type=\"radio\" name=\"caption_${id}\" value=\"reject\" checked style=\"accent-color:#dc2626\"> Reject\n      </label>\n    </div>\n  `;\n}\n\nconst html = `<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>DuberyMNL Caption Review</title>\n<style>\n  body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 16px; max-width: 600px; margin: 0 auto; }\n  h1 { font-size: 20px; margin-bottom: 4px; }\n  p { color: #666; font-size: 13px; margin-bottom: 20px; }\n  button { background: #16a34a; color: #fff; border: none; border-radius: 8px; padding: 14px 28px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 8px; }\n</style>\n</head>\n<body>\n<h1>DuberyMNL Weekly Captions</h1>\n<p>Review all 25. Unanswered = reject. Hit Submit when done.</p>\n<form method=\"POST\" action=\"\">\n  ${cards}\n    <div style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n    <div style=\"font-size:13px;font-weight:700;color:#333;margin-bottom:8px\">Feedback for Agent (optional)</div>\n    <textarea name=\"feedback\" rows=\"3\" placeholder=\"e.g. More bundle captions. Fix Taglish ratio. More outdoor vibes.\" style=\"width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:14px;resize:vertical\"></textarea>\n    <div style=\"font-size:11px;color:#aaa;margin-top:4px\">Leave blank to skip. If filled, new captions will be generated after you submit.</div>\n  </div>;\n\n  <button type=\"submit\">Submit Review</button>\n</form>\n</body>\n</html>`\n\nreturn [{ json: { html } }];\n"
+        "jsCode": "const rows = items;\n\nlet cards = '';\nfor (let i = 0; i < rows.length; i++) {\n  const d = rows[i].json;\n\n  let stars = '';\n  for (let n = 1; n <= 5; n++) {\n    stars += '<span data-star=\"' + n + '\" data-card=\"' + i + '\" class=\"star\" style=\"font-size:28px;cursor:pointer;color:#ddd;line-height:1\">★</span>';\n  }\n\n  cards += `\n    <div style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n      <div style=\"font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px\">${d.Vibe} · ${d.Model}</div>\n      <div style=\"font-size:15px;line-height:1.5;white-space:pre-wrap;margin-bottom:10px\">${d.Caption}</div>\n      <div style=\"font-size:12px;color:#aaa;margin-bottom:12px\">${d.Hashtags}</div>\n      <div style=\"display:flex;align-items:center;gap:8px\">\n        ${stars}\n        <input type=\"hidden\" name=\"rating_${i}\" id=\"star_val_${i}\" value=\"0\">\n        <span id=\"star_label_${i}\" style=\"font-size:11px;color:#aaa;margin-left:4px\">No stars = reject</span>\n      </div>\n    </div>\n  `;\n}\n\nconst html = `<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>DuberyMNL Caption Review</title>\n<style>\n  body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 16px; max-width: 600px; margin: 0 auto; }\n  h1 { font-size: 20px; margin-bottom: 4px; }\n  p { color: #666; font-size: 13px; margin-bottom: 20px; }\n  button { background: #16a34a; color: #fff; border: none; border-radius: 8px; padding: 14px 28px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 8px; }\n</style>\n</head>\n<body>\n<h1>DuberyMNL Weekly Captions</h1>\n<p>Tap stars to approve and rate. No stars = reject. Hit Submit when done.</p>\n<form method=\"POST\" action=\"\">\n  ${cards}\n  <div style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n    <div style=\"font-size:13px;font-weight:700;color:#333;margin-bottom:8px\">Feedback for Agent (optional)</div>\n    <textarea name=\"feedback\" rows=\"3\" placeholder=\"e.g. More bundle captions. Fix Taglish ratio. More outdoor vibes.\" style=\"width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:14px;resize:vertical\"></textarea>\n    <div style=\"font-size:11px;color:#aaa;margin-top:4px\">Leave blank to skip. If filled, new captions will be generated after you submit.</div>\n  </div>\n  <button type=\"submit\">Submit Review</button>\n</form>\n<script>\ndocument.addEventListener('click', function(e) {\n  if (!e.target.classList.contains('star')) return;\n  var card = e.target.dataset.card;\n  var val = parseInt(e.target.dataset.star);\n  document.getElementById('star_val_' + card).value = val;\n  document.querySelectorAll('[data-card=\"' + card + '\"]').forEach(function(s) {\n    s.style.color = parseInt(s.dataset.star) <= val ? '#f59e0b' : '#ddd';\n  });\n  var label = document.getElementById('star_label_' + card);\n  if (label) label.textContent = val >= 3\n  ? val + ' star' + (val > 1 ? 's' : '') + ' — approved'\n  : val + ' star' + (val > 1 ? 's' : '') + ' — rejected';\n\n});\n</script>\n</body>\n</html>`\n\nreturn [{ json: { html } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -152,7 +152,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const parsed = $('Parse Form').first().json;\nconst approvedIds = new Set(parsed.approved.map(String));\nconst now = new Date().toISOString();\n\nconst result = [];\nfor (const item of items) {\n  const row = item.json;\n  const decision = approvedIds.has(String(row.ID)) ? 'approve' : 'reject';\n  result.push({\n    json: {\n      Timestamp: now,\n      Vibe: row.Vibe,\n      Model: row.Model,\n      Caption: row.Caption,\n      Hashtags: row.Hashtags,\n      Generated_At: row.Generated_At,\n      decision\n    }\n  });\n}\n\nreturn result;\n"
+        "jsCode": "const ratings = $('Parse Form').first().json.ratings || {};\nconst now = new Date().toISOString();\n\nconst result = [];\nfor (let i = 0; i < items.length; i++) {\n  const row = items[i].json;\n  const rating = ratings[String(i)] || 0;\n  const decision = rating >= 3 ? 'approve' : 'reject';\n  result.push({\n    json: {\n      Timestamp: now,\n      Vibe: row.Vibe,\n      Model: row.Model,\n      Caption: row.Caption,\n      Hashtags: row.Hashtags,\n      Generated_At: row.Generated_At,\n      Rating: decision === 'approve' ? rating : null,\n      decision\n    }\n  });\n}\n\nreturn result;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -175,11 +175,11 @@
           "conditions": [
             {
               "id": "969fd4a0-768b-4ccd-bd7a-d700496bb512",
-              "leftValue": "={{ $json.decision }}",
-              "rightValue": "approve",
+              "leftValue": "={{ $json.Rating }}",
+              "rightValue": 3,
               "operator": {
-                "type": "string",
-                "operation": "equals"
+                "type": "number",
+                "operation": "gte"
               }
             }
           ],
@@ -271,6 +271,16 @@
               "display": true,
               "type": "string",
               "canBeUsedToMatch": true
+            },
+            {
+              "id": "Rating ",
+              "displayName": "Rating ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             }
           ],
           "attemptToConvertTypes": false,
@@ -763,7 +773,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "d6133891-bc42-4cfd-964a-012e72e37467",
+  "versionId": "489141d3-12b7-4da3-9c13-5d421331ce2e",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "8f5f556501a1bc089acc180bf8210118b142ca69e9a04b407b5e834f5e047cd4"
