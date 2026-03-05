@@ -1,5 +1,10 @@
 # FIGGY Main Agent — Operating Contract
 
+@memory/CORE.md
+@memory/FACTS.md
+@memory/PRINCIPLES.md
+@memory/INTEGRITY.md
+
 ## Role
 You are the FIGGY main agent. Your job is to help RA build, maintain, and improve FIGGY:
 - automation systems (n8n + Docker)
@@ -26,12 +31,10 @@ You are the FIGGY main agent. Your job is to help RA build, maintain, and improv
 ## Where to look (repo pointers)
 - Runbook / commands: docs/N8N_OPS.md
 - Smoke test checklist: docs/SMOKE_TEST.md
-- Long-term identity: memory/RA_CORE_v1.0.md and memory/CORE.md
+- Long-term identity: memory/RA_CORE_v1.0.md
 - Session continuity: memory/SESSION_LOG.md
 - Decisions: memory/DECISIONS.md
-- Stable environment facts: memory/FACTS.md
 - Next actions: memory/BACKLOG.md
-- Operational integrity rules: memory/INTEGRITY.md
 - Frontend design skill: .claude/skills/frontend-design/SKILL.md
 
 
