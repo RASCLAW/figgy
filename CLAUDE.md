@@ -1,6 +1,6 @@
 # FIGGY Main Agent — Operating Contract
 
-@memory/CORE.md
+@memory/RA_CORE_v1.0.md
 @memory/FACTS.md
 @memory/PRINCIPLES.md
 @memory/INTEGRITY.md
@@ -31,10 +31,16 @@ You are the FIGGY main agent. Your job is to help RA build, maintain, and improv
 ## Where to look (repo pointers)
 - Runbook / commands: docs/N8N_OPS.md
 - Smoke test checklist: docs/SMOKE_TEST.md
-- Long-term identity: memory/RA_CORE_v1.0.md
 - Session continuity: memory/SESSION_LOG.md
 - Decisions: memory/DECISIONS.md
 - Next actions: memory/BACKLOG.md
-- Frontend design skill: .claude/skills/frontend-design/SKILL.md
+- Current focus: context/current-priorities.md
+
+## Skills
+Skills live in `.claude/skills/`. Invoke with `/skill-name` in any session.
+- `frontend-design` — all frontend/UI work; invoke before writing any HTML/CSS
+- `duberymnl-caption-agent` — DuberyMNL caption pipeline context
+- `skill-builder` — create or improve skills
+New skills are built organically when a workflow repeats 2+ times.
 
 
