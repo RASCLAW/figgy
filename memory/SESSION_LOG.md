@@ -1,5 +1,44 @@
 # SESSION LOG (Milestone-Based)
 
+## 2026-03-06 — FIGGY System Upgrade: EA Eval + Memory Architecture ✅
+
+### Changes (Objective)
+- Evaluated "Executive Assistant Initialize Prompt" (found online) against FIGGY — concluded it would conflict if merged; better as a separate project
+- Adopted 3 best ideas from EA prompt into FIGGY: `@` imports, `.claude/rules/`, `context/` folder
+- Added `@` imports to CLAUDE.md: CORE → RA_CORE_v1.0.md, FACTS, PRINCIPLES, INTEGRITY auto-load every session
+- Created `.claude/rules/communication-style.md` — persistent comm style rule file (checklists, copy-paste blocks, no silent memory edits, plan mode for complex tasks)
+- Rebuilt BACKLOG.md from scratch — replaced stale entries with real current next actions from SESSION_LOG
+- Created `context/current-priorities.md` — live single-page focus file, DuberyMNL pipeline state
+- Added Skills section to CLAUDE.md with directory pointer and `/skill-name` invocation pattern
+- Created `templates/session-closeout.md` — structured closeout template with checklist
+- Logged ADR-003 in DECISIONS.md
+
+### Key Technical Patterns
+- `@path/to/file` in CLAUDE.md = auto-loaded at session start (not just a hint)
+- `.claude/rules/*.md` = persistent behavior rules, loaded automatically, separate from agent contract
+- BACKLOG.md must be updated at session closeout — otherwise SESSION_LOG becomes the de facto backlog
+
+### Verified Working
+- `@` imports in CLAUDE.md committed and verified via git diff ✅
+- `.claude/rules/communication-style.md` created and committed ✅
+- All 5 improvements committed in 2 clean commits (`75bae88`, `ee9923c`) ✅
+
+### Decisions
+- Swap `@memory/CORE.md` for `@memory/RA_CORE_v1.0.md` — RA_CORE is a strict superset; loading both wastes context tokens
+- Skip `context/` folder mirroring the EA prompt's structure — memory/ already covers identity; create only `context/current-priorities.md` (no equivalent in memory/)
+- EA prompt best suited as a separate Claude Code project, not merged into FIGGY
+
+### Deferred
+- No blockers. DuberyMNL pipeline resumes next session.
+
+### Next Session
+**Resume here:**
+1. Add Tavily API key in n8n → Settings → Variables → `TAVILY_API_KEY`
+2. Connect Tavily tool to WF1 Agent node
+3. Deploy DuberyMNL site to GitHub Pages or Netlify
+
+---
+
 ## 2026-03-05 — DuberyMNL WF2 Stars-Only Review ✅
 
 ### Changes (Objective)
