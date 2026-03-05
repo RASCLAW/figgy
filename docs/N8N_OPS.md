@@ -14,7 +14,7 @@ n8n runs at `http://localhost:5678` inside Docker. The container name is `dubery
 
 **Start n8n:**
 ```bash
-cd projects/duberymnl-automation-v2
+cd projects/figgy/projects/duberymnl-automation-v2
 docker compose up -d
 ```
 

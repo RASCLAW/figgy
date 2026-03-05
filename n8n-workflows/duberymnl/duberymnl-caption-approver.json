@@ -1,0 +1,773 @@
+{
+  "name": "WF2 — DuberyMNL Approval Handler",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body;\n\nconst approved = [];\nconst rejected = [];\n\nfor (const [key, value] of Object.entries(body)) {\n  if (!key.startsWith('caption_')) continue;\n  const id = key.replace('caption_', '');\n  if (value === 'approve') {\n    approved.push(id);\n  } else {\n    rejected.push(id);\n  }\n}\n\nreturn [{ json: { approved, rejected, approvedCount: approved.length, rejectedCount: rejected.length } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        -240
+      ],
+      "id": "867dfbc6-765f-46e0-8507-b0ebb9c4bf45",
+      "name": "Parse Form"
+    },
+    {
+      "parameters": {
+        "path": "duberymnl-review",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ea9d8c90-acf6-4f93-b5e9-5610ccfe4b66",
+      "name": "GET — Review Page",
+      "webhookId": "ca3fd7b2-f59a-425a-808e-08ebd71a8f79"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "pending_review",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "af338e77-94bf-497b-aa66-81c1f6a58f82",
+      "name": "Read Pending Captions",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = items;\n\nlet cards = '';\nfor (const row of rows) {\n  const d = row.json;\n  const id = d.ID;\n  cards += `\n    <div style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n      <div style=\"font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px\">${d.Vibe} · ${d.Model}</div>\n      <div style=\"font-size:15px;line-height:1.5;white-space:pre-wrap;margin-bottom:10px\">${d.Caption}</div>\n      <div style=\"font-size:12px;color:#aaa;margin-bottom:12px\">${d.Hashtags}</div>\n      <label style=\"display:inline-flex;align-items:center;gap:6px;margin-right:16px;cursor:pointer\">\n        <input type=\"radio\" name=\"caption_${id}\" value=\"approve\" style=\"accent-color:#16a34a\"> Approve\n      </label>\n      <label style=\"display:inline-flex;align-items:center;gap:6px;cursor:pointer\">\n        <input type=\"radio\" name=\"caption_${id}\" value=\"reject\" checked style=\"accent-color:#dc2626\"> Reject\n      </label>\n    </div>\n  `;\n}\n\nconst html = `<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>DuberyMNL Caption Review</title>\n<style>\n  body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 16px; max-width: 600px; margin: 0 auto; }\n  h1 { font-size: 20px; margin-bottom: 4px; }\n  p { color: #666; font-size: 13px; margin-bottom: 20px; }\n  button { background: #16a34a; color: #fff; border: none; border-radius: 8px; padding: 14px 28px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 8px; }\n</style>\n</head>\n<body>\n<h1>DuberyMNL Weekly Captions</h1>\n<p>Review all 25. Unanswered = reject. Hit Submit when done.</p>\n<form method=\"POST\" action=\"\">\n  ${cards}\n    <div style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n    <div style=\"font-size:13px;font-weight:700;color:#333;margin-bottom:8px\">Feedback for Agent (optional)</div>\n    <textarea name=\"feedback\" rows=\"3\" placeholder=\"e.g. More bundle captions. Fix Taglish ratio. More outdoor vibes.\" style=\"width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:14px;resize:vertical\"></textarea>\n    <div style=\"font-size:11px;color:#aaa;margin-top:4px\">Leave blank to skip. If filled, new captions will be generated after you submit.</div>\n  </div>;\n\n  <button type=\"submit\">Submit Review</button>\n</form>\n</body>\n</html>`\n\nreturn [{ json: { html } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "1cf734ac-a11e-4987-9380-a80c4ecf62ce",
+      "name": "Build Review HTML"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        0
+      ],
+      "id": "f00d769c-cc00-4db0-994d-00544045b694",
+      "name": "Serve Review Page"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "duberymnl-review",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        -240
+      ],
+      "id": "d24c9ea0-093e-4388-bb68-84a3edc109ed",
+      "name": "POST — Form Submission",
+      "webhookId": "74d7efee-f621-4ac8-8b73-1763da4968a6"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "pending_review",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        496,
+        -240
+      ],
+      "id": "2890b585-5f16-4841-973a-c044ba3b5f79",
+      "name": "Read Pending For Sort",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const parsed = $('Parse Form').first().json;\nconst approvedIds = new Set(parsed.approved.map(String));\nconst now = new Date().toISOString();\n\nconst result = [];\nfor (const item of items) {\n  const row = item.json;\n  const decision = approvedIds.has(String(row.ID)) ? 'approve' : 'reject';\n  result.push({\n    json: {\n      Timestamp: now,\n      Vibe: row.Vibe,\n      Model: row.Model,\n      Caption: row.Caption,\n      Hashtags: row.Hashtags,\n      Generated_At: row.Generated_At,\n      decision\n    }\n  });\n}\n\nreturn result;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        -240
+      ],
+      "id": "8aa2b7ea-4f46-4b21-afa1-0f64b51203d3",
+      "name": "Tag Decisions"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "969fd4a0-768b-4ccd-bd7a-d700496bb512",
+              "leftValue": "={{ $json.decision }}",
+              "rightValue": "approve",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        912,
+        -240
+      ],
+      "id": "39b84111-b07b-4cc0-8a5c-d7673ddd531b",
+      "name": "Route by Decision"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1494155456,
+          "mode": "list",
+          "cachedResultName": "approved_content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=1494155456"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp ",
+              "displayName": "Timestamp ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Vibe",
+              "displayName": "Vibe",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Model",
+              "displayName": "Model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hashtags",
+              "displayName": "Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Generated_At",
+              "displayName": "Generated_At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -336
+      ],
+      "id": "0fbbcdbc-3e80-4703-a64a-60ca20a76287",
+      "name": "Append Approved",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1943710065,
+          "mode": "list",
+          "cachedResultName": "rejected_content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=1943710065"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp ",
+              "displayName": "Timestamp ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Vibe",
+              "displayName": "Vibe",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Model",
+              "displayName": "Model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Hashtags",
+              "displayName": "Hashtags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Generated_At",
+              "displayName": "Generated_At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        -144
+      ],
+      "id": "ce507d36-b69f-4940-9097-2a2c58e901b0",
+      "name": "Append Rejected",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1312,
+        -240
+      ],
+      "id": "e0a582b9-4370-4010-b7e7-e3e9b8cf030c",
+      "name": "Merge Branches"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>Review Submitted</title>\n<style>\n  body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 40px 16px; max-width: 400px; margin: 0 auto; text-align: center; }\n  .check { font-size: 64px; margin-bottom: 16px; }\n  h1 { font-size: 22px; margin-bottom: 8px; }\n  p { color: #666; font-size: 14px; }\n</style>\n</head>\n<body>\n  <div class=\"check\">✅</div>\n  <h1>Review submitted!</h1>\n  <p>Captions sorted. Pending queue cleared.<br>You can close this tab.</p>\n</body>\n</html>\n",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2368,
+        -224
+      ],
+      "id": "70e96cd1-84b5-4908-9e41-f17fd7dbc096",
+      "name": "Send Confirmation"
+    },
+    {
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "pending_review",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=0"
+        },
+        "clear": "specificRange",
+        "range": "A2:Z1000"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1520,
+        -240
+      ],
+      "id": "9df40840-b5af-43b6-8dbd-6ec722dfdcba",
+      "name": "Clear Pending Queue",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 914038723,
+          "mode": "list",
+          "cachedResultName": "feedback",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=914038723"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp ": "={{ new Date().toISOString() }}",
+            "Feedback": "={{ $('POST — Form Submission').first().json.body.feedback }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp ",
+              "displayName": "Timestamp ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Feedback",
+              "displayName": "Feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1728,
+        -240
+      ],
+      "id": "57de118d-dfac-4726-9cbc-299864578f82",
+      "name": "Write Feedback",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "69e3a961-3403-4a2f-aa71-dfae42c29b80",
+              "leftValue": "={{ $('POST — Form Submission').first().json.body.feedback }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1936,
+        -240
+      ],
+      "id": "dda2bd10-01dd-41e7-974f-8ad243845d59",
+      "name": "Has Feedback?"
+    },
+    {
+      "parameters": {
+        "url": "http://localhost:5678/webhook/duberymnl-regenerate",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2144,
+        -336
+      ],
+      "id": "981cd2a3-9f20-4815-90b4-f84c979f05f9",
+      "name": "Trigger Regenerate"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Parse Form": {
+      "main": [
+        [
+          {
+            "node": "Read Pending For Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GET — Review Page": {
+      "main": [
+        [
+          {
+            "node": "Read Pending Captions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Pending Captions": {
+      "main": [
+        [
+          {
+            "node": "Build Review HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Review HTML": {
+      "main": [
+        [
+          {
+            "node": "Serve Review Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST — Form Submission": {
+      "main": [
+        [
+          {
+            "node": "Parse Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Pending For Sort": {
+      "main": [
+        [
+          {
+            "node": "Tag Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag Decisions": {
+      "main": [
+        [
+          {
+            "node": "Route by Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Decision": {
+      "main": [
+        [
+          {
+            "node": "Append Approved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Approved": {
+      "main": [
+        [
+          {
+            "node": "Merge Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append Rejected": {
+      "main": [
+        [
+          {
+            "node": "Merge Branches",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Branches": {
+      "main": [
+        [
+          {
+            "node": "Clear Pending Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Pending Queue": {
+      "main": [
+        [
+          {
+            "node": "Write Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Feedback": {
+      "main": [
+        [
+          {
+            "node": "Has Feedback?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Feedback?": {
+      "main": [
+        [
+          {
+            "node": "Trigger Regenerate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger Regenerate": {
+      "main": [
+        [
+          {
+            "node": "Send Confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d6133891-bc42-4cfd-964a-012e72e37467",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8f5f556501a1bc089acc180bf8210118b142ca69e9a04b407b5e834f5e047cd4"
+  },
+  "id": "UjwoaLBgmkCeBbbu",
+  "tags": []
+}

@@ -1,0 +1,214 @@
+{
+  "name": "DuberyMNL Content Generator",
+  "nodes": [
+    {
+      "id": "cg-001",
+      "name": "Form: Content Request",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [240, 300],
+      "webhookId": "cg-form-dubery-001",
+      "parameters": {
+        "formTitle": "DuberyMNL — Generate Content",
+        "formDescription": "Fill in the details below to auto-generate a lifestyle photo brief and image.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Product Model",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  { "option": "Outback — Red" },
+                  { "option": "Outback — Blue" },
+                  { "option": "Outback — Grey" },
+                  { "option": "Outback — Black" },
+                  { "option": "Outback — Green" },
+                  { "option": "Bandits — Tortoise" },
+                  { "option": "Bandits — Camo" },
+                  { "option": "Classic — Blue" },
+                  { "option": "Classic — Black" },
+                  { "option": "Rasta — Black/Orange" },
+                  { "option": "Lycra — Sand Black" },
+                  { "option": "Drifters — XL" },
+                  { "option": "Evans — Mint" },
+                  { "option": "Evans — Black" }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Content Format",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  { "option": "Scene / Lifestyle Vibe" },
+                  { "option": "Brand Statement" },
+                  { "option": "Lifestyle with Models" },
+                  { "option": "Infographic / Feature Breakdown" },
+                  { "option": "Package / Hero Shot" }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "Scene / Vibe",
+              "fieldType": "text",
+              "requiredField": true,
+              "placeholder": "e.g. motorcycle couple on tropical road, EDSA commuter, beach weekend, trail hike"
+            },
+            {
+              "fieldLabel": "Product Photo",
+              "fieldType": "file",
+              "requiredField": true,
+              "acceptFileTypes": ".jpg,.jpeg,.png"
+            },
+            {
+              "fieldLabel": "Notes",
+              "fieldType": "textarea",
+              "requiredField": false,
+              "placeholder": "Specific instructions: subjects, angle, mood, color emphasis, etc."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "cg-002",
+      "name": "Code: Build Claude Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 300],
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst product = item.json['Product Model'];\nconst format = item.json['Content Format'];\nconst vibe = item.json['Scene / Vibe'];\nconst notes = item.json['Notes'] || 'None';\n\n// Extract product image as base64 NOW before binary gets dropped by HTTP node\nconst binaryKey = Object.keys(item.binary || {})[0];\nconst binaryData = item.binary?.[binaryKey];\nconst imageBase64 = binaryData?.data || '';\nconst imageMime = binaryData?.mimeType || 'image/jpeg';\n\nconst systemPrompt = `You are the DuberyMNL content brief generator.\n\nBRAND RULES (never violate):\n- Product: Dubery polarized sunglasses\n- Pricing: ₱699 single / ₱1,200 bundle (2 pcs) / ₱100 delivery / COD only / Metro Manila only\n- Voice: Taglish (Tagalog + English mix) — confident, cool, relatable — NOT corporate, NOT pure English\n- Headline: 3–7 words max, bold, ALL CAPS\n- Caption: 2–4 lines, Taglish, hashtags at end\n- NEVER say: free shipping, nationwide, ₱499\n- ALWAYS note: price badge (₱699 LANG!) + DUBERY MNL logo in layout\n- Hashtags: #DuberyMNL #PolarizedSunglasses #DuberyOptics #CODMetroManila #SameDayDelivery\n\nPRODUCT MODEL DETAILS:\n- Outback: Multiple colorways (Red/Blue/Grey/Black/Green), outdoor/trail/driving vibe\n- Bandits: Tortoise or Camo frame, orange mirror lens, city/daily style\n- Classic: Blue or Black, hidden camo inner arm detail, everyday versatile\n- Rasta: Black frame, orange lens, Rasta stripe arm detail, lifestyle/culture\n- Lycra: Sand Black, sport/active\n- Drifters: XL frame, outdoor, bold look\n- Evans: Mint or Black, fresh/minimalist\nKEY SELLING POINT (all models): Inner arm detail — hidden design only visible up close. Always call this out.\n\nGEMINI PROMPT RULES (critical for image quality):\n1. Specify EXACT camera angle: 45-degree side/3/4 profile — NEVER frontal dead-on\n2. If couple: explicitly state woman is NOT wearing sunglasses, she is looking at the man\n3. Describe product with EXACT spec (frame color, lens color, arm design from model above)\n4. Include this exact line: Use the provided product image as the subject. Do NOT alter the product color, frame design, or lens. Generate only the background/scene/environment around it. Keep the product 100% faithful to the original image.\n5. End with: Realistic photo style, not illustrated. Portrait 4:5 composition. No watermarks, no text.\n\nOUTPUT FORMAT — return EXACTLY these delimiters:\n---GEMINI_PROMPT---\n[Full Gemini prompt, 100–200 words]\n---END---\n\n---HEADLINE---\n[3–7 word Taglish headline, ALL CAPS]\n---END---\n\n---SUPPORTING_LINE---\n[1 line max, Taglish benefit or mood]\n---END---\n\n---CAPTION---\n[2–4 lines, Taglish, end with hashtags on new line]\n---END---\n\n---CANVA_SPEC---\nCanvas: 1080x1350px (portrait 4:5)\nFont: Anton (condensed bold)\nHeadline: [placement, color, alignment]\nSupporting line: [placement, color]\nLogo: DUBERY MNL — [corner]\nPrice badge: white circle, red text, 699 LANG — [corner]\n---END---`;\n\nconst userMessage = `Generate a full DuberyMNL content brief for:\\n- Product: ${product}\\n- Format: ${format}\\n- Scene/Vibe: ${vibe}\\n- Notes: ${notes}`;\n\nreturn [{\n  json: {\n    product,\n    format,\n    vibe,\n    notes,\n    image_base64: imageBase64,\n    image_mime: imageMime,\n    claude_payload: {\n      model: 'claude-sonnet-4-6',\n      max_tokens: 2048,\n      system: systemPrompt,\n      messages: [{ role: 'user', content: userMessage }]\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "cg-003",
+      "name": "HTTP: Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "x-api-key", "value": "={{ $vars.ANTHROPIC_API_KEY }}" },
+            { "name": "anthropic-version", "value": "2023-06-01" },
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.claude_payload) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "cg-004",
+      "name": "Code: Parse Brief + Build Gemini Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 300],
+      "parameters": {
+        "jsCode": "const claudeItem = $input.first();\nconst originalItem = $('Code: Build Claude Request').first();\n\nconst claudeText = claudeItem.json.content?.[0]?.text || '';\n\n// Parse delimited sections from Claude response\nfunction extractSection(text, tag) {\n  const openTag = `---${tag}---`;\n  const closeTag = '---END---';\n  const start = text.indexOf(openTag);\n  if (start === -1) return '';\n  const contentStart = start + openTag.length;\n  const end = text.indexOf(closeTag, contentStart);\n  if (end === -1) return '';\n  return text.slice(contentStart, end).trim();\n}\n\nconst geminiPrompt = extractSection(claudeText, 'GEMINI_PROMPT');\nconst headline = extractSection(claudeText, 'HEADLINE');\nconst supportingLine = extractSection(claudeText, 'SUPPORTING_LINE');\nconst caption = extractSection(claudeText, 'CAPTION');\nconst canvaSpec = extractSection(claudeText, 'CANVA_SPEC');\n\n// Recover image from the earlier Code node (not lost to HTTP response)\nconst imageBase64 = originalItem.json.image_base64;\nconst imageMime = originalItem.json.image_mime;\n\nif (!geminiPrompt) {\n  throw new Error('Failed to parse Gemini prompt from Claude response. Raw: ' + claudeText.slice(0, 300));\n}\n\nif (!imageBase64) {\n  throw new Error('Product image base64 is missing. Check form upload.');\n}\n\nconst geminiPayload = {\n  contents: [{\n    parts: [\n      { inlineData: { mimeType: imageMime, data: imageBase64 } },\n      { text: geminiPrompt }\n    ]\n  }],\n  generationConfig: {\n    responseModalities: ['TEXT', 'IMAGE']\n  }\n};\n\nreturn [{\n  json: {\n    product: originalItem.json.product,\n    format: originalItem.json.format,\n    vibe: originalItem.json.vibe,\n    gemini_prompt: geminiPrompt,\n    headline,\n    supporting_line: supportingLine,\n    caption,\n    canva_spec: canvaSpec,\n    gemini_payload: geminiPayload\n  }\n}];"
+      }
+    },
+    {
+      "id": "cg-005",
+      "name": "HTTP: Gemini Image API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1360, 300],
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "key", "value": "={{ $vars.GEMINI_API_KEY }}" }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "content-type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.gemini_payload) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "cg-006",
+      "name": "Code: Extract Generated Image",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1640, 300],
+      "parameters": {
+        "jsCode": "const geminiItem = $input.first();\nconst briefItem = $('Code: Parse Brief + Build Gemini Request').first();\n\nconst parts = geminiItem.json.candidates?.[0]?.content?.parts || [];\n\nlet imageBase64 = '';\nlet imageMimeType = 'image/png';\n\nfor (const part of parts) {\n  if (part.inlineData?.data) {\n    imageBase64 = part.inlineData.data;\n    imageMimeType = part.inlineData.mimeType || 'image/png';\n    break;\n  }\n}\n\nconst result = {\n  json: {\n    product: briefItem.json.product,\n    format: briefItem.json.format,\n    vibe: briefItem.json.vibe,\n    headline: briefItem.json.headline,\n    supporting_line: briefItem.json.supporting_line,\n    caption: briefItem.json.caption,\n    canva_spec: briefItem.json.canva_spec,\n    gemini_prompt: briefItem.json.gemini_prompt,\n    has_image: imageBase64.length > 0,\n    image_mime: imageMimeType\n  }\n};\n\nif (imageBase64) {\n  result.binary = {\n    generated_image: {\n      data: imageBase64,\n      mimeType: imageMimeType,\n      fileName: `dubery-content-${Date.now()}.png`,\n      fileExtension: 'png'\n    }\n  };\n}\n\nreturn [result];"
+      }
+    },
+    {
+      "id": "cg-007",
+      "name": "Gmail: Send Content Brief",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [1920, 300],
+      "parameters": {
+        "sendTo": "={{ $vars.RA_EMAIL }}",
+        "subject": "={{ '🕶️ DuberyMNL Brief — ' + $json.product + ' / ' + $json.format }}",
+        "emailType": "html",
+        "message": "={{ `<!DOCTYPE html><html><body style='font-family:Arial,sans-serif;max-width:680px;margin:0 auto;padding:20px;color:#222;'><h1 style='border-bottom:3px solid #cc0000;padding-bottom:10px;'>🕶️ DuberyMNL Content Brief</h1><table style='width:100%;border-collapse:collapse;margin-bottom:24px;'><tr><td style='padding:8px 12px;background:#f5f5f5;font-weight:bold;width:130px;'>Product</td><td style='padding:8px 12px;'>${$json.product}</td></tr><tr><td style='padding:8px 12px;background:#f5f5f5;font-weight:bold;'>Format</td><td style='padding:8px 12px;'>${$json.format}</td></tr><tr><td style='padding:8px 12px;background:#f5f5f5;font-weight:bold;'>Vibe</td><td style='padding:8px 12px;'>${$json.vibe}</td></tr></table><h2 style='color:#cc0000;margin-top:0;'>📸 Generated Image</h2><p>${$json.has_image ? '✅ Image attached — save and bring into Canva for finishing.' : '⚠️ No image returned from Gemini — check API response or retry.'}</p><h2 style='color:#cc0000;'>🖊️ Headline</h2><p style='font-size:22px;font-weight:bold;background:#111;color:#fff;padding:14px 18px;letter-spacing:1px;'>${$json.headline}</p><h2 style='color:#cc0000;'>Supporting Line</h2><p style='padding:10px 14px;background:#f9f9f9;border-left:4px solid #cc0000;font-size:15px;'>${$json.supporting_line}</p><h2 style='color:#cc0000;'>📝 Facebook Caption</h2><pre style='background:#f9f9f9;padding:16px;border-left:4px solid #cc0000;white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;'>${$json.caption}</pre><h2 style='color:#cc0000;'>🎨 Canva Spec</h2><pre style='background:#f0f7ff;padding:16px;border-left:4px solid #0070f3;white-space:pre-wrap;font-family:monospace;font-size:13px;'>${$json.canva_spec}</pre><h2 style='color:#cc0000;'>🤖 Gemini Prompt Used</h2><pre style='background:#f5f5f5;padding:16px;border:1px solid #ddd;white-space:pre-wrap;font-family:monospace;font-size:12px;color:#555;'>${$json.gemini_prompt}</pre><hr style='margin-top:32px;'/><p style='color:#aaa;font-size:12px;text-align:center;'>Generated by FIGGY • DuberyMNL Content Pipeline</p></body></html>` }}",
+        "attachmentsUi": {
+          "attachmentsBinary": [
+            { "property": "generated_image" }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GIeJXuKP2hplZsUX",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Form: Content Request": {
+      "main": [[{ "node": "Code: Build Claude Request", "type": "main", "index": 0 }]]
+    },
+    "Code: Build Claude Request": {
+      "main": [[{ "node": "HTTP: Claude API", "type": "main", "index": 0 }]]
+    },
+    "HTTP: Claude API": {
+      "main": [[{ "node": "Code: Parse Brief + Build Gemini Request", "type": "main", "index": 0 }]]
+    },
+    "Code: Parse Brief + Build Gemini Request": {
+      "main": [[{ "node": "HTTP: Gemini Image API", "type": "main", "index": 0 }]]
+    },
+    "HTTP: Gemini Image API": {
+      "main": [[{ "node": "Code: Extract Generated Image", "type": "main", "index": 0 }]]
+    },
+    "Code: Extract Generated Image": {
+      "main": [[{ "node": "Gmail: Send Content Brief", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "meta": { "templateCredsSetupCompleted": false },
+  "versionId": "cg-v1-20260303",
+  "id": "DuberyMNLContentGen001",
+  "active": false,
+  "tags": ["duberymnl", "content", "ai"]
+}
