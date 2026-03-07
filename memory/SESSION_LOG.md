@@ -11,8 +11,27 @@
 - Key fix: Fetch Image Result taskId MUST use `$('Call Nano Banana 2').first().json.data.taskId` — NOT from Wait node
 - Key fix: Fetch Image Result response format must be set to **JSON**
 
-### Pending
-- Mark Caption Used node (Google Sheets update)
+### Mark Caption Used — Completed ✅ (continued session)
+
+**What was accomplished:**
+- Mark Caption Used node working in WF3 — writes TRUE to approved_content column L for the used row
+
+**The struggle:**
+- Native Google Sheets "Update Row" node fails silently when Caption column has special characters (₱, quotes) — string match returns 0 rows, no error thrown
+- HTTP Request approach initially failed because the node was tested in isolation (Execute step) — `$('Pick Caption').first().json.row_number` had no upstream data to resolve, URL became `...!Lundefined?...`
+
+**What was learned:**
+- Use row_number coordinate targeting (Google Sheets API PUT) instead of column-match for updates — immune to special characters
+- Always test HTTP Request nodes that use upstream expressions by running the full workflow (or bypass chain), not Execute step in isolation
+- Isolation debugging pattern: build a separate 2-node test workflow (Manual Trigger → HTTP Request hardcoded) to confirm credential and body format before adding expressions
+- Milestone trigger rule added to communication-style.md — "success!", "milestone!", "accomplished!", "done for the day!" auto-trigger a checkpoint save
+
+**Final node config (Mark Caption Used):**
+- Type: HTTP Request
+- Method: PUT
+- URL: `https://sheets.googleapis.com/v4/spreadsheets/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/values/approved_content!L{{ $('Pick Caption').first().json.row_number }}?valueInputOption=RAW`
+- Auth: Google Sheets OAuth2
+- Body: `{ "values": [["TRUE"]] }`
 
 ---
 
