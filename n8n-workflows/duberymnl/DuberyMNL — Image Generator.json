@@ -1,0 +1,308 @@
+{
+  "name": "DuberyMNL — Image Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## WF3 — Image Generator\n\n**Flow:**\n1. Manual Trigger → Read approved_content sheet\n2. Pick Caption (5★ first, random; fallback 4★)\n3. Agent 1 writes fal.ai prompt\n4. Email RA with Approve / Reject links\n5. Wait for click → Route decision\n6. [Approved] → fal.ai → Drive → Ready to Post\n7. [Rejected] → End\n\n**Before first run:**\n- Add column `Caption_Used` to approved_content sheet (leave blank by default)\n- Wire fal.ai API key + hero shot URLs (see STUB nodes)\n- Create `ready_to_post` sheet in same spreadsheet",
+        "height": 280,
+        "width": 380,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-40, -320],
+      "id": "sticky-001",
+      "name": "Setup Notes"
+    },
+    {
+      "parameters": {
+        "content": "## STUB — fal.ai (Wire when ready)\n\nNode type: HTTP Request\nMethod: POST\nURL: https://fal.run/fal-ai/[MODEL-ID]\n\nHeaders:\n- Authorization: Key YOUR_FAL_API_KEY\n- Content-Type: application/json\n\nBody (JSON):\n```\n{\n  \"prompt\": \"{{ $('Agent 1 — Prompt Writer').first().json.output }}\",\n  \"image_url\": \"[hero shot URL from lookup]\",\n  \"image_size\": \"portrait_4_3\"\n}\n```\n\nHero shot lookup by Selected_Model:\nAdd a Code node before this that maps\nSelected_Model → { url, bg_type }\ne.g. CLASSIC Blue → Drive URL (white BG)\nUse transparent PNG for TYPE A/B/C\nUse white BG for TYPE D/E",
+        "height": 340,
+        "width": 380,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [2060, -340],
+      "id": "sticky-002",
+      "name": "fal.ai Stub Notes"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 0],
+      "id": "node-wf3-001",
+      "name": "Manual Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1494155456,
+          "mode": "list",
+          "cachedResultName": "approved_content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=1494155456"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [300, 0],
+      "id": "node-wf3-002",
+      "name": "Read Approved Content",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Star-tiered random caption selector\n// Picks from 5-star pool first; falls back to 4-star if empty\n// Skips rows already marked Caption_Used = TRUE\n//\n// NOTE: The 'Rating' column has a trailing space in the sheet header.\n// This is intentional — match it exactly as 'Rating '.\n\nconst rows = $input.all();\n\nconst eligible = rows.filter(row => {\n  const rating = parseInt((row.json['Rating '] || '0').toString().trim());\n  const used = (row.json['Caption_Used'] || '').toString().trim().toUpperCase();\n  return rating >= 4 && used !== 'TRUE';\n});\n\nif (eligible.length === 0) {\n  throw new Error(\n    'No eligible captions found. ' +\n    'Make sure approved_content has rows with Rating 4 or 5 ' +\n    'and Caption_Used column blank or FALSE.'\n  );\n}\n\nconst fiveStars = eligible.filter(\n  r => parseInt((r.json['Rating '] || '0').toString().trim()) === 5\n);\nconst fourStars = eligible.filter(\n  r => parseInt((r.json['Rating '] || '0').toString().trim()) === 4\n);\n\n// 5-star pool first; fall back to 4-star\nconst pool = fiveStars.length > 0 ? fiveStars : fourStars;\n\n// Random pick within the chosen pool\nconst picked = pool[Math.floor(Math.random() * pool.length)];\n\n// Preserve row number (1-indexed, +1 for header) for downstream Caption_Used update\nconst rowIndex = rows.indexOf(picked) + 2;\n\nreturn [{\n  json: {\n    ...picked.json,\n    _row_index: rowIndex,\n    _pool_size: pool.length,\n    _pool_tier: fiveStars.length > 0 ? '5-star' : '4-star'\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, 0],
+      "id": "node-wf3-003",
+      "name": "Pick Caption"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=SELECTED CAPTION FOR IMAGE GENERATION:\n\nCaption:\n{{ $('Pick Caption').first().json.Caption }}\n\nHashtags: {{ $('Pick Caption').first().json.Hashtags }}\nVibe: {{ $('Pick Caption').first().json.Vibe }}\nVisual_Anchor: {{ $('Pick Caption').first().json.Visual_Anchor }}\nSelected_Model: {{ $('Pick Caption').first().json.Selected_Model }}\n\nWrite the complete fal.ai image generation prompt for this caption.",
+        "options": {
+          "systemMessage": "# AGENT 1 — DuberyMNL Image Prompt Writer\n\n## Role\nYou are a world-class Facebook ad creative director specializing\nin mobile-first visual storytelling for Filipino consumer brands.\nYour job is to take one approved marketing caption and transform\nit into a complete, highly detailed image generation prompt for\nfal.ai.\n\nThe prompt you write will be sent to an AI image editor alongside\nan actual product hero shot. The AI uses your prompt to produce\nthe final Facebook ad image.\n\n## Brand Context\n- Brand: DuberyMNL\n- Product: Polarized UV-protection sunglasses\n- Price: ₱699\n- Market: Metro Manila / NCR, Philippines\n- Audience: Young Filipino adults (18-35)\n- Language register: Confident, direct, Filipino vernacular (\"lodi\", \"na\", etc.)\n- Delivery: Same-day within Metro Manila, Cash on Delivery (COD)\n- Visual identity: Bold, dynamic, photo-realistic\n\n## Input\nOne approved marketing caption, with a visual_anchor field\nindicating whether the caption concept anchors to a PERSON or\na PRODUCT. Use this as a strong starting hint for content type\nselection — but let the Caption Analysis confirm the choice.\n\n## Output\nOne complete fal.ai image generation prompt. Output the prompt\nonly — no explanation, no preamble, no commentary.\n\n---\n\n## Step 1: Caption Analysis (Internal Reasoning)\n\nSilently run all five steps. Use the output to drive every\nvisual decision in Step 2.\n\n### 1. Pain Point (The Hook)\nWhat physical or emotional discomfort does this caption agitate?\n→ Becomes: the visual hook — expression, lighting, scene tension.\n\n### 2. Relevance & Urgency (The Context)\nWhat modern or localized context does the caption set?\nWhat cultural tone does it strike?\n→ Becomes: scene tone, composition style, cultural grounding.\n\n### 3. Product Proof (The Desire)\nWhat technical or lifestyle claim needs to be SHOWN, not told?\n→ Becomes: a specific visual proof element (e.g., sharp skyline\n  reflected in polarized lens, product in its natural element).\n\n### 4. Friction Removal (The Close)\nWhat facts convert a scroller into a buyer?\n→ Becomes: graphic overlays — price, delivery, CTA energy.\n\nMap to AIDA:\n- Attention  → Pain point / visual hook\n- Interest   → Local vibe, cultural tone, composition\n- Desire     → Visual proof of product benefit\n- Action     → P699, same-day delivery, DUBERY as overlays\n\n### 5. Content Type Selection\nBased on the analysis above and the visual_anchor hint,\nselect ONE content type. Choose what best serves this caption.\n\nTYPE A — PERSON + PRODUCT\n  Use when: caption agitates a human pain point or experience.\n  A person is the visual anchor. Product is worn or held.\n  Full overlay treatment required.\n\nTYPE B — PRODUCT IN ENVIRONMENT\n  Use when: caption is context-setting or lifestyle-driven.\n  Product is placed naturally in a real-world setting\n  (shop shelf, table, outdoor surface).\n  Minimal overlays — DUBERY logo + tagline only.\n\nTYPE C — PRODUCT LIFESTYLE MINIMAL\n  Use when: caption is aspirational or vibe-based.\n  Product in a scenic or atmospheric backdrop.\n  Brand name + one strong tagline. Clean and minimal.\n\nTYPE D — PRODUCT HERO AD\n  Use when: caption focuses on a specific benefit or feature.\n  Product in a natural environment with a visual proof element\n  (e.g., lens reflection of the surroundings).\n  Full overlay treatment required.\n\nTYPE E — INFOGRAPHIC\n  Use when: caption lists or describes multiple product features.\n  Product is the anchor. Callout arrows point to specific\n  parts of the product with short feature labels.\n  DUBERY logo + price badge required.\n\n---\n\n## Step 2: Write the Prompt\n\nUsing the Caption Analysis and selected Content Type,\nwrite a complete fal.ai prompt with all sections below.\nSections marked (ALL TYPES) are always required.\nOverlay requirements vary by type — follow them exactly.\n\n### 1. GOAL (ALL TYPES)\nState the output: a dynamic, photo-realistic advertisement\nfor a Facebook feed, optimized for mobile (4:5 vertical ratio).\nState the selected content type and the visual mood.\n\n### 2. SCENE / ENVIRONMENT (ALL TYPES)\nFull detail. Where, what time of day, atmosphere, light quality.\nGround the scene in a specific Metro Manila or Philippine\nenvironment. No generic stock-photo locations.\n\nFor TYPE A: the environment frames the human subject.\nFor TYPE B/C: the environment IS the visual story.\nFor TYPE D: the environment is reflected in the lens.\nFor TYPE E: the environment is a clean, uncluttered backdrop.\n\n### 3. PRODUCT VARIABLE (ALL TYPES)\nAlways include verbatim:\n\n\"This ad MUST feature the exact style, frame shape, material,\nand lens color of the sunglasses shown in the [User-Provided\nReference Image]. The Dubery logo must match the logo style\nand placement shown in the reference image. Do not alter the\nproduct in any way.\"\n\n### 4. VISUAL STRUCTURE (ALL TYPES)\nThe core of the prompt. Describe every physical element\nin full detail based on the selected content type:\n\nTYPE A — Describe: subject(s), expression, emotion, body\n  language, action, how the product is worn, lighting per\n  area, composition, visual proof element.\n\nTYPE B — Describe: product placement on surface, surrounding\n  props and objects, ambient lighting, depth of field,\n  mood of the environment.\n\nTYPE C — Describe: product position in frame, scenic backdrop,\n  how light interacts with the product and scene, atmosphere,\n  what makes this setting aspirational.\n\nTYPE D — Describe: product placement on surface or ground,\n  the environment visible in the lens reflection (must be\n  sharp and recognizable), surrounding scene details,\n  lighting quality.\n\nTYPE E — Describe: product position, angle, each callout\n  arrow and its label text, visual style of the callouts\n  (arrows, bubbles, lines), overall layout of callouts\n  around the product.\n\nBe highly specific. Vague instructions produce weak output.\n\n### 5. AD OVERLAYS\n\nACCURACY RULE: Every text element must be spelled exactly\nand correctly. Use these fixed strings verbatim — no variation:\n  P699 / POLARIZED / DUBERY / SAME-DAY DELIVERY / METRO MANILA\n\nFor dynamic text (headlines, body copy, taglines): spelling\nmust be accurate and directly relevant to the caption.\nNo filler. No placeholder text.\n\nDYNAMIC RULE: Visual style, placement, font, color, shape —\nall creative and unique per concept. No two ads look the same.\n\nInstruct the image AI to render all text with sharp, clean,\nfully legible letterforms. Blurred or distorted text is\nnot acceptable.\n\nRequired overlays by type:\n\nTYPE A — Full treatment:\n  → P699 price display (prominent)\n  → POLARIZED label\n  → Same-day delivery + Metro Manila\n  → DUBERY logo\n  → Headline derived from caption hook\n  → Body copy derived from caption voice\n\nTYPE B — Minimal:\n  → DUBERY logo\n  → One short tagline relevant to the caption\n\nTYPE C — Minimal:\n  → DUBERY brand name (prominent)\n  → One strong tagline relevant to the caption\n\nTYPE D — Full treatment:\n  → P699 price display (prominent)\n  → POLARIZED label\n  → Same-day delivery + Metro Manila\n  → DUBERY logo\n  → Bold headline derived from caption\n  → Supporting line derived from caption\n\nTYPE E — Feature callouts:\n  → Each product feature from the caption as a callout label\n    with an arrow pointing to the relevant part of the product\n  → DUBERY logo\n  → P699 price badge\n\nFor each overlay, describe: visual treatment, position in\nframe, and how it connects to the overall concept.\n\n---\n\n## Hard Rules\n1. Product fidelity is non-negotiable — exact frame, lens,\n   material, logo as shown in reference image.\n2. Follow overlay requirements for the selected content type.\n3. Ad must feel native to a Filipino's Facebook feed —\n   authentic, not generic.\n4. Output the prompt only. No meta-commentary.\n\n## Quality Benchmark\nA strong output leaves zero ambiguity. Every element described:\nwhat it looks like, where it is, how the light behaves, what\nthe person is feeling (if applicable), and how every overlay\nis styled and positioned. The entire prompt traces directly\nback to the Caption Analysis — nothing is arbitrary."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [900, 0],
+      "id": "node-wf3-004",
+      "name": "Agent 1 — Prompt Writer"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [900, -160],
+      "id": "node-wf3-005",
+      "name": "OpenAI GPT-4o",
+      "credentials": {
+        "openAiApi": {
+          "id": "t808ZCbHgJLVXLLf",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "sarinasmedia@gmail.com",
+        "subject": "=DuberyMNL — Image Prompt Ready: {{ $('Pick Caption').first().json.Selected_Model }} | {{ $('Pick Caption').first().json.Vibe }}",
+        "message": "=<div style=\"background:#fff;color:#111;font-family:Arial,sans-serif;padding:28px;max-width:640px;\">\n\n<h2 style=\"margin:0 0 4px;\">DuberyMNL — Image Prompt Ready</h2>\n<p style=\"color:#666;margin:0 0 24px;\">Agent 1 has written a fal.ai prompt. Review and decide below.</p>\n\n<table style=\"width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px;\">\n  <tr style=\"background:#f5f5f5;\">\n    <td style=\"padding:10px 12px;font-weight:bold;color:#555;width:130px;\">Model</td>\n    <td style=\"padding:10px 12px;\">{{ $('Pick Caption').first().json.Selected_Model }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:10px 12px;font-weight:bold;color:#555;\">Vibe</td>\n    <td style=\"padding:10px 12px;\">{{ $('Pick Caption').first().json.Vibe }}</td>\n  </tr>\n  <tr style=\"background:#f5f5f5;\">\n    <td style=\"padding:10px 12px;font-weight:bold;color:#555;\">Visual Anchor</td>\n    <td style=\"padding:10px 12px;\">{{ $('Pick Caption').first().json.Visual_Anchor }}</td>\n  </tr>\n  <tr>\n    <td style=\"padding:10px 12px;font-weight:bold;color:#555;\">Star Rating</td>\n    <td style=\"padding:10px 12px;\">{{ $('Pick Caption').first().json['Rating '] }}</td>\n  </tr>\n</table>\n\n<h3 style=\"margin:0 0 8px;\">Caption</h3>\n<div style=\"background:#f4f4f4;padding:16px;border-radius:6px;margin-bottom:24px;white-space:pre-wrap;font-size:14px;line-height:1.6;\">{{ $('Pick Caption').first().json.Caption }}</div>\n\n<h3 style=\"margin:0 0 8px;\">Generated fal.ai Prompt</h3>\n<div style=\"background:#fff8e1;padding:16px;border-radius:6px;border:1px solid #ffe082;white-space:pre-wrap;font-size:13px;line-height:1.7;\">{{ $json.output }}</div>\n\n<hr style=\"border:none;border-top:1px solid #eee;margin:32px 0;\">\n\n<p style=\"font-size:15px;margin-bottom:16px;\"><strong>Send this to fal.ai?</strong></p>\n\n<table style=\"border-collapse:separate;border-spacing:10px 0;\">\n  <tr>\n    <td>\n      <a href=\"{{ $resumeWebhookUrl }}?decision=approve\"\n         style=\"display:inline-block;background:#34a853;color:#fff;text-decoration:none;padding:14px 32px;border-radius:6px;font-weight:bold;font-size:15px;\">\n        Approve — Generate Image\n      </a>\n    </td>\n    <td>\n      <a href=\"{{ $resumeWebhookUrl }}?decision=reject\"\n         style=\"display:inline-block;background:#ea4335;color:#fff;text-decoration:none;padding:14px 32px;border-radius:6px;font-weight:bold;font-size:15px;\">\n        Reject — Skip\n      </a>\n    </td>\n  </tr>\n</table>\n\n<p style=\"color:#aaa;font-size:11px;margin-top:28px;\">Single-use link tied to this execution. Do not forward.</p>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [1200, 0],
+      "id": "node-wf3-006",
+      "name": "Send Approval Email",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "GIeJXuKP2hplZsUX",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1500, 0],
+      "id": "node-wf3-007",
+      "name": "Wait for Decision",
+      "webhookId": "duberymnl-wf3-approval-gate"
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "rules": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.query.decision }}",
+                    "rightValue": "approve",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Approved"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.query.decision }}",
+                    "rightValue": "reject",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Rejected"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [1800, 0],
+      "id": "node-wf3-008",
+      "name": "Route Decision"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2100, -120],
+      "id": "node-wf3-009",
+      "name": "STUB — fal.ai Generate Image"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2400, -120],
+      "id": "node-wf3-010",
+      "name": "STUB — Upload to Drive"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2700, -120],
+      "id": "node-wf3-011",
+      "name": "STUB — Log to Ready to Post"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [3000, -120],
+      "id": "node-wf3-013",
+      "name": "STUB — Mark Caption Used"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [2100, 120],
+      "id": "node-wf3-012",
+      "name": "STUB — Rejected (End)"
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [{"node": "Read Approved Content", "type": "main", "index": 0}]
+      ]
+    },
+    "Read Approved Content": {
+      "main": [
+        [{"node": "Pick Caption", "type": "main", "index": 0}]
+      ]
+    },
+    "Pick Caption": {
+      "main": [
+        [{"node": "Agent 1 — Prompt Writer", "type": "main", "index": 0}]
+      ]
+    },
+    "OpenAI GPT-4o": {
+      "ai_languageModel": [
+        [{"node": "Agent 1 — Prompt Writer", "type": "ai_languageModel", "index": 0}]
+      ]
+    },
+    "Agent 1 — Prompt Writer": {
+      "main": [
+        [{"node": "Send Approval Email", "type": "main", "index": 0}]
+      ]
+    },
+    "Send Approval Email": {
+      "main": [
+        [{"node": "Wait for Decision", "type": "main", "index": 0}]
+      ]
+    },
+    "Wait for Decision": {
+      "main": [
+        [{"node": "Route Decision", "type": "main", "index": 0}]
+      ]
+    },
+    "Route Decision": {
+      "main": [
+        [{"node": "STUB — fal.ai Generate Image", "type": "main", "index": 0}],
+        [{"node": "STUB — Rejected (End)", "type": "main", "index": 0}]
+      ]
+    },
+    "STUB — fal.ai Generate Image": {
+      "main": [
+        [{"node": "STUB — Upload to Drive", "type": "main", "index": 0}]
+      ]
+    },
+    "STUB — Upload to Drive": {
+      "main": [
+        [{"node": "STUB — Log to Ready to Post", "type": "main", "index": 0}]
+      ]
+    },
+    "STUB — Log to Ready to Post": {
+      "main": [
+        [{"node": "STUB — Mark Caption Used", "type": "main", "index": 0}]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

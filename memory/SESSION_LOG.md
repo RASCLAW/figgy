@@ -1,5 +1,72 @@
 # SESSION LOG (Milestone-Based)
 
+## 2026-03-07 (continued) — WF3 PIPELINE COMPLETE ✅
+
+### WF3 Full Pipeline Verified Working
+- Full node chain end-to-end: Manual Trigger → Read Approved Content → Pick Caption → Lookup Reference Image → Agent 1 → Parse Prompt → Call Nano Banana 2 → Wait 30s → Fetch Image Result → Is Image Ready? (polling loop) → Wait 30s (CDN buffer) → Extract Image URL → Download Image → Upload to Drive
+- Images landing in Google Drive Generated Images folder ✅
+- Reference images (all 14 product variants) in Drive, public, used as `image_input` ✅
+- Polling loop: IF `$json.code` is not equal to `422` → continue; else loop back to Wait 30s
+- CDN buffer: extra 30s Wait before Download Image (kie.ai CDN needs time after recordInfo returns 200)
+- Key fix: Fetch Image Result taskId MUST use `$('Call Nano Banana 2').first().json.data.taskId` — NOT from Wait node
+- Key fix: Fetch Image Result response format must be set to **JSON**
+
+### Pending
+- Mark Caption Used node (Google Sheets update)
+
+---
+
+## 2026-03-07 (continued) — WF3 Manual Build Start + Nano Banana 2 Decision
+
+### Changes (Objective)
+- Abandoned WF3 JSON import (repeated "Could not find property option" error never resolved)
+- Switched to manual node-by-node build in n8n UI for reliability
+- Tested Node 1 (Manual Trigger) ✅
+- Built and tested Node 2 (Read Approved Content) ✅
+- Built and tested Node 3 (Pick Caption / Code node) ✅ — star-tiered random selector working
+- Confirmed Google Sheets UI action labels from user screenshots (saved to `n8n-patterns.md` as ground truth)
+- **Key decision: Image generation provider switched from fal.ai → Nano Banana 2 (kie.ai)**
+
+### Key Technical Patterns
+- n8n manual build UI is more reliable than JSON import for complex workflows — user sees actual option dropdowns, eliminates guessing operation strings
+- UI action picker in n8n 2.9.4 shows all available Google Sheets actions verbatim; this is ground truth for future JSON authoring
+- Pick Caption Code node: `$input.all()` returns rows from previous node; filters by `Rating ` (with trailing space) and `Caption_Used`; outputs `_row_index` for downstream "Mark Caption Used" node
+- Nano Banana 2 (kie.ai) vs fal.ai nano-banana: former is GENERATOR (from scratch), latter is EDITOR (needs reference image). Nano Banana 2 supports 4:5 aspect ratio natively, async API with callback URL support
+
+### Verified Working
+- Node 1 (Manual Trigger) ✅
+- Node 2 (Read Approved Content → Google Sheets "Get row(s) in sheet") ✅
+- Node 3 (Pick Caption → code node with star-tiered random selection) ✅ tested via "Test workflow"
+- Node 4 (Agent 1 — Prompt Writer → AI Agent + Gemini Chat Model) ✅ outputs JSON with "prompt" key
+- Node 4.5 (Parse Prompt → Code node) ✅ parses Agent 1 JSON output, emits clean {prompt: "..."}
+- Node 5 (Call Nano Banana 2 → HTTP Request) ✅ returns taskId from kie.ai
+
+### Key Technical Patterns (added)
+- Node 5 body uses Raw mode + Content Type: application/json (NOT manual Content-Type header — causes ERR_INVALID_CHAR)
+- Node 5 body uses `JSON.stringify($('Parse Prompt').first().json.prompt)` — required to escape ₱, newlines, quotes in prompt
+- Agent 1 system prompt must include "Output ONLY valid raw JSON, no markdown, no code blocks" to suppress triple-backtick wrapping
+- Parse Prompt code node: try/catch handles both JSON-wrapped and plain-text Agent 1 output
+
+### Pending
+- Node 6: Wait node (listen for kie.ai callback)
+- Node 7: Route Decision (Switch node — Approved/Rejected)
+- Node 8+: Email approval, stubs (Upload to Drive, Log to Ready to Post)
+- Node 9: Mark Caption Used (Google Sheets update)
+- Test full workflow (Trigger → Email → Approve → Route → kie.ai → callback)
+- Export completed workflow JSON to git repo
+
+### Insight (Growth)
+- JSON-first approach to n8n workflows has a reliability ceiling — manual UI build trades speed for confidence (user validates each option, no guessing field names)
+- User's screenshot-sending approach (UI action labels) creates ground truth for future JSON work — memory-first architecture beats specification-guessing
+- Nano Banana 2 unblocks WF3: no hero shot sourcing needed, generates from scratch, callback support = cleaner n8n Wait integration
+
+### Next Logic Gate
+- RA confirms kie.ai API key ready
+- Rewrite Agent 1 system prompt for Nano Banana 2 (fal.ai-specific language → Nano Banana 2 format)
+- Continue Node 4 setup: paste system prompt + wire Chat Model
+
+---
+
 ## 2026-03-07 — Context Optimization + WF1 Model Swap → Gemini Live ✅
 
 ### Changes (Objective)
