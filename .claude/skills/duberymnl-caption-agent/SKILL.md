@@ -115,20 +115,31 @@ VIBE 2 — Outdoor / Tactical
 Scene: Trail, road trip, Tagaytay / La Union / Batangas drive, motorcycle, moto camping,
   car camping, beach camping, running, biking
 Models: All models
-Tone: Active, adventurous, built-for-the-outdoors energy — whether you're riding, running, or setting up camp
+Tone: Active, adventurous, built-for-the-outdoors energy — whether you're riding, running, or setting up camp.
+2 of 5 captions in this vibe must be PRODUCT-anchored: no person in the scene.
+Visualize the product resting on a trail rock, a motorcycle handlebar, a campsite surface,
+or a beach towel — the environment tells the story, not a person wearing it.
+3 of 5 captions remain PERSON-anchored as normal.
 Hook ideas: kalsada, byahe, hangin, adventure, "built for the outdoors", glare on the trail,
   early morning rides, beach sun, campsite vibe
 
 VIBE 3 — Urban / Streetwear
 Scene: City daily wear, sneaker/fit energy, Cubao/BGC/Marikina, street-level cool
 Models: All models
-Tone: Confident, subtle flex, "pa-cool" but grounded
+Tone: Confident, subtle flex, "pa-cool" but grounded.
+1 of 5 captions in this vibe must be PRODUCT-anchored: product flat-lay on an urban
+surface — concrete, a café table, a sneaker box. Clean, editorial energy.
+4 of 5 remain PERSON-anchored.
 Hook ideas: daily fit, clean look, porma check, effortless style
 
 VIBE 4 — Lifestyle / Culture
 Scene: Pinoy pride, Filipino identity, community, everyday life moments, Rasta as one flavor
 Models: All models
-Tone: Warm, proud, culturally grounded — lead with Pinoy identity, Rasta is a supporting vibe not the headline
+Tone: Warm, proud, culturally grounded — lead with Pinoy identity, Rasta is a supporting vibe not the headline.
+2 of 5 captions in this vibe must be PRODUCT-anchored: aspirational and minimal.
+Think short, atmospheric lines like "Sa bawat sunset." or "Pinoy pride, every golden hour."
+No person. Product in a scene. Tagline energy only.
+3 of 5 captions remain PERSON-anchored as normal.
 Hook ideas: Pinoy pride, komunidad, kultura, golden hour, everyday Filipino moments, squad
 
 VIBE 5 — Sale / Urgency
@@ -137,6 +148,15 @@ Models: All models (pick whichever fits the hook)
 Tone: Urgent but not desperate. ₱699 is the hero. Metro Manila delivery is the closer.
 Hook ideas: same-day lang, ngayon na, last chance energy, "hindi na mas sulit pa dito"
 Constraints: Every caption MUST feature ₱699 prominently. CTA must have urgency ("Order na ngayon", "DM us now").
+
+TONE DISTRIBUTION (mandatory):
+Exactly 3 of the 25 captions must use a slightly elevated, polished tone — confident
+and clean, not kanto-chic. Not agency-speak or corporate jargon. Think: a well-spoken
+friend who sounds composed and intentional, not sabog. These create variety in the feed.
+Suggested placement:
+- 1 in Urban/Streetwear (editorial, minimal)
+- 1 in Lifestyle/Culture (proud, composed)
+- 1 in Sale/Urgency (clean, direct close)
 
 BUNDLE DISTRIBUTION (mandatory):
 Exactly 5 of the 25 captions must feature ₱1,200 / 2 pairs. Suggested placement:
@@ -168,6 +188,7 @@ Return ONLY valid JSON. No explanation, no markdown fences, no commentary.
       "id": 1,
       "vibe": "Commuter/Anti-Corporate",
       "model": "All Models",
+      "visual_anchor": "PERSON",
       "caption_text": "caption body here\n\nOrder na!",
       "hashtags": "#DuberyMNL #PolarizedSunglasses #DuberyOptics #CODMetroManila #SameDayDelivery"
     }
@@ -179,3 +200,13 @@ IDs 6–10:  Outdoor/Tactical
 IDs 11–15: Urban/Streetwear
 IDs 16–20: Lifestyle/Culture
 IDs 21–25: Sale/Urgency
+
+visual_anchor values:
+  "PERSON"  — caption concept centers on a human experience
+  "PRODUCT" — caption concept centers on the product in a scene
+
+PRODUCT-anchor distribution per run (mandatory):
+  Vibe 2 (Outdoor):   2 of 5 → visual_anchor: "PRODUCT"
+  Vibe 3 (Urban):     1 of 5 → visual_anchor: "PRODUCT"
+  Vibe 4 (Lifestyle): 2 of 5 → visual_anchor: "PRODUCT"
+  All others:         visual_anchor: "PERSON"

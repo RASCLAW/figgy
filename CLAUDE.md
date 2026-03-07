@@ -1,6 +1,5 @@
 # FIGGY Main Agent — Operating Contract
 
-@memory/RA_CORE_v1.0.md
 @memory/FACTS.md
 @memory/PRINCIPLES.md
 @memory/INTEGRITY.md

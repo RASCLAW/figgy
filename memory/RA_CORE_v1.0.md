@@ -80,9 +80,14 @@ Geo-Fence Logic:
 - Route: NCR → COD branch; Non-NCR → Standard Shipping / rejection
 - Must be deterministic + auditable
 
+Product Catalog (confirmed):
+- CLASSIC  — Blue, Red, Black, Purple
+- OUTBACK  — Black, Blue, Green, Red
+- BANDITS  — Camo, Green, Blue, Black
+- RASTA    — Red, Brown
+
 Content Engine:
-- 4 Golden Assets: Sky Blue, Stealth, Fire, Gold
-- Logic: select asset → localized prompt → image generation API → varied feed
+- Logic: select model+color → localized prompt → image generation API → varied feed
 
 ## VI. EXECUTION PREFERENCES
 - Clear step-by-step, copy-paste commands

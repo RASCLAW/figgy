@@ -1,5 +1,112 @@
 # SESSION LOG (Milestone-Based)
 
+## 2026-03-07 — Context Optimization + WF1 Model Swap → Gemini Live ✅
+
+### Changes (Objective)
+- Diagnosed context fill patterns: identified `@` imports, system reminder diffs, large JSON full-file reads as primary costs
+- Implemented targeted Grep-first, range-read pattern for large files — saved to `memory/FACTS.md` as durable rule
+- Removed `@memory/RA_CORE_v1.0.md` from CLAUDE.md imports (saves ~134 lines per session; RA_CORE content now in FACTS + MEMORY)
+- Swapped WF1 (Caption Generator) LLM from OpenAI (gpt-4o) to **Google Gemini 2.5-flash**
+- Created Google Gemini Chat Model node + configured API key
+
+### Key Technical Patterns
+- Grep + Read-with-range is the "controllable cost" in Claude Code sessions — system reminders from file diffs are uncontrollable
+- `@` imports in CLAUDE.md are auto-loaded at session start (not hints) — every file added increases baseline token cost
+- RA_CORE_v1.0.md (134 lines) was operational information duplicated in FACTS/MEMORY — removal reduced per-session overhead
+- n8n Agent node is model-agnostic: swap LLM provider in the Chat Model child node, system prompt stays unchanged
+
+### Verified Working
+- WF1 executed perfectly with Gemini 2.5-flash ✅
+- 25 captions generated with correct Visual_Anchor field ✅
+- Caption flow through WF2 (review page with filter + model picker) confirmed ✅
+- All downstream sheets (approved_content, rejected_content) received Visual_Anchor + Selected_Model fields ✅
+
+### Decisions
+- Use Gemini 2.5-flash for WF1 (latest, fast, capable for caption generation)
+- Removed RA_CORE from auto-imports — RA can read on-demand when onboarding new AI tools
+- Grep-first approach saved to FACTS.md as durable rule for all future context-conscious sessions
+
+### Insight (Growth)
+- Context management is about identifying *controllable* costs (proactive reads) vs *uncontrollable* (system reminder diffs)
+- Architecture > model choice — system prompt survives any LLM swap at the n8n level
+- Memory imports at session start have compounding cost — three 50-line files = 150 baseline tokens before first message
+
+### Next Logic Gate
+**WF3 node design** — Image Generator pipeline is architecturally locked, Agent 1 system prompt finalized at `.claude/skills/duberymnl-image-prompt-writer/SKILL.md`. Ready to build nodes.
+
+---
+
+## 2026-03-06 — WF3 Image Generator: Full Architecture + Agent 1 System Prompt Designed 🚧
+
+### Changes (Objective)
+- Designed complete WF3 (Image Generator) architecture for DuberyMNL pipeline
+- Reviewed Nate's nano-banana n8n workflows (Edit Image Tool + Combine Images) — confirmed fal.ai integration pattern
+- Designed Agent 1 system prompt with AIDA framework + Caption Analysis step
+- Defined "Ready to Post" sheet schema (caption + image Drive link + prompt + tokens + model/color)
+
+### Key Technical Patterns
+- fal.ai nano-banana is an image EDITOR, not generator — requires existing product hero shot as input via image_urls
+- ImgBB used as public URL intermediary — fal.ai needs public URLs, Google Drive files must be re-uploaded to ImgBB first
+- fal.ai async queue pattern: POST → get request_id → wait 10s → poll → retry loop (5s) on error output
+- Caption selection: waterfall priority — 5-star pool first, fallback to 4-star pool, random within tier
+- Caption marked used by moving row to "Ready to Post" sheet (not a flag column — absence = consumed)
+- Prompt is model-agnostic — model/color selection happens at approval time via n8n Form picker
+- Same prompt can produce 4 ads by swapping input hero shot image (content multiplication)
+
+### Decisions
+- Schedule trigger (not event-driven) for WF3 Agent 1 runs
+- Batch of 5 prompts before approval email fires (cost + attention management)
+- n8n Form for approval: editable prompt textareas + model/color radio buttons per prompt
+- Rejected prompts regenerate on next scheduled run (same caption, new prompt attempt)
+- Agent 1 is fully model-agnostic — no product catalog needed in system prompt; image does the work
+- Ad overlays: brand content is fixed (₱699, POLARIZED, same-day delivery, DUBERY), visual execution is dynamic per concept
+- Overlay accuracy rule: exact brand strings must render verbatim, no approximation
+- "Ready to Post" row = complete content asset: caption + image Drive link + prompt used + tokens + model/color + timestamp
+
+### WF3 Architecture (Locked)
+```
+Schedule trigger
+→ Pull top-rated captions from Approved Captions sheet (5-star first, 4-star fallback, random within tier)
+→ Agent 1: Caption Analysis (AIDA framework) → generate fal.ai image prompt
+→ Append to Sheets (status: pending) + check count
+→ [count < 5] stop; [count >= 5] pull all pending → build n8n Form → send email
+→ RA reviews: edit prompts + pick model/color per prompt → submit
+→ [Approved] Agent 2: hero shot → ImgBB → fal.ai → Drive → move caption to "Ready to Post" sheet
+→ [Rejected] flag for regeneration on next run
+```
+
+### Agent 1 System Prompt Structure (Designed, not yet finalized)
+1. Caption Analysis (internal reasoning) — Pain Point, Relevance/Urgency, Product Proof, Friction Removal → AIDA map
+2. GOAL — photo-realistic, Facebook feed, 4:5, mobile
+3. SCENE / ENVIRONMENT — specific Manila setting
+4. PRODUCT VARIABLE — hard rule verbatim (exact frame/lens/logo from reference image)
+5. VISUAL STRUCTURE — detailed scene from analysis
+6. AD OVERLAYS — dynamic execution, fixed brand content, accuracy rule for exact brand strings
+
+### Additional Work (same session, continued)
+- Reviewed all 6 DuberyMNL sample content files — identified 5 valid content types for fal.ai (A-E)
+- Comic/illustrated style (Sample 1) flagged as out of scope for fal.ai
+- Product naming confirmed from file names: Classic, Bandits, Rasta, Outback
+- Price confirmed: ₱699 (₱499 in Sample 4 is old/outdated)
+- Agent 1 system prompt revised to include 5 content types + content type selection logic
+- Agent 1 system prompt locked and saved to `.claude/skills/duberymnl-image-prompt-writer/SKILL.md`
+- Tested Agent 1 prompt in Gemini — produced 2 professional-grade Type A Facebook ads
+- WF1 caption agent updated: visual_anchor field, product-anchor rules (5 per run), 3 elevated-tone captions per run
+- Updated WF1 SKILL.md tested in Gemini — correct distribution, product-anchor captions validated
+
+### Deferred
+- Apply updated WF1 system prompt to live n8n agent node (SKILL.md updated, n8n not yet)
+- WF3 node design not started
+- WF3 JSON build not started
+- Google Drive MCP (Option B) — on hold, RA approved plan
+
+### Next Session
+**Resume here:**
+1. Apply updated WF1 SKILL.md to live n8n agent node (copy system prompt into agent node)
+2. Begin WF3 node design in n8n
+
+---
+
 ## 2026-03-06 — FIGGY System Upgrade: EA Eval + Memory Architecture ✅
 
 ### Changes (Objective)

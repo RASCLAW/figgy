@@ -65,7 +65,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rows = items;\n\nlet cards = '';\nfor (let i = 0; i < rows.length; i++) {\n  const d = rows[i].json;\n\n  let stars = '';\n  for (let n = 1; n <= 5; n++) {\n    stars += '<span data-star=\"' + n + '\" data-card=\"' + i + '\" class=\"star\" style=\"font-size:28px;cursor:pointer;color:#ddd;line-height:1\">★</span>';\n  }\n\n  cards += `\n    <div style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n      <div style=\"font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px\">${d.Vibe} · ${d.Model}</div>\n      <div style=\"font-size:15px;line-height:1.5;white-space:pre-wrap;margin-bottom:10px\">${d.Caption}</div>\n      <div style=\"font-size:12px;color:#aaa;margin-bottom:12px\">${d.Hashtags}</div>\n      <div style=\"display:flex;align-items:center;gap:8px\">\n        ${stars}\n        <input type=\"hidden\" name=\"rating_${i}\" id=\"star_val_${i}\" value=\"0\">\n        <span id=\"star_label_${i}\" style=\"font-size:11px;color:#aaa;margin-left:4px\">No stars = reject</span>\n      </div>\n    </div>\n  `;\n}\n\nconst html = `<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>DuberyMNL Caption Review</title>\n<style>\n  body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 16px; max-width: 600px; margin: 0 auto; }\n  h1 { font-size: 20px; margin-bottom: 4px; }\n  p { color: #666; font-size: 13px; margin-bottom: 20px; }\n  button { background: #16a34a; color: #fff; border: none; border-radius: 8px; padding: 14px 28px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 8px; }\n</style>\n</head>\n<body>\n<h1>DuberyMNL Weekly Captions</h1>\n<p>Tap stars to approve and rate. No stars = reject. Hit Submit when done.</p>\n<form method=\"POST\" action=\"\">\n  ${cards}\n  <div style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n    <div style=\"font-size:13px;font-weight:700;color:#333;margin-bottom:8px\">Feedback for Agent (optional)</div>\n    <textarea name=\"feedback\" rows=\"3\" placeholder=\"e.g. More bundle captions. Fix Taglish ratio. More outdoor vibes.\" style=\"width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:14px;resize:vertical\"></textarea>\n    <div style=\"font-size:11px;color:#aaa;margin-top:4px\">Leave blank to skip. If filled, new captions will be generated after you submit.</div>\n  </div>\n  <button type=\"submit\">Submit Review</button>\n</form>\n<script>\ndocument.addEventListener('click', function(e) {\n  if (!e.target.classList.contains('star')) return;\n  var card = e.target.dataset.card;\n  var val = parseInt(e.target.dataset.star);\n  document.getElementById('star_val_' + card).value = val;\n  document.querySelectorAll('[data-card=\"' + card + '\"]').forEach(function(s) {\n    s.style.color = parseInt(s.dataset.star) <= val ? '#f59e0b' : '#ddd';\n  });\n  var label = document.getElementById('star_label_' + card);\n  if (label) label.textContent = val >= 3\n  ? val + ' star' + (val > 1 ? 's' : '') + ' — approved'\n  : val + ' star' + (val > 1 ? 's' : '') + ' — rejected';\n\n});\n</script>\n</body>\n</html>`\n\nreturn [{ json: { html } }];\n"
+        "jsCode": "const rows = items;\n\nlet cards = '';\nfor (let i = 0; i < rows.length; i++) {\n  const d = rows[i].json;\n\n  let stars = '';\n  for (let n = 1; n <= 5; n++) {\n    stars += '<span data-star=\"' + n + '\" data-card=\"' + i + '\" class=\"star\" style=\"font-size:28px;cursor:pointer;color:#ddd;line-height:1\">★</span>';\n  }\n\n  cards += `\n    <div data-anchor=\"${d.Visual_Anchor}\" style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n      <div style=\"font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px\">${d.Vibe} · ${d.Model} · ${d.Visual_Anchor || '—'}</div>\n      <div style=\"font-size:15px;line-height:1.5;white-space:pre-wrap;margin-bottom:10px\">${d.Caption}</div>\n      <div style=\"font-size:12px;color:#aaa;margin-bottom:12px\">${d.Hashtags}</div>\n      <div style=\"margin-bottom:10px\">\n        <select name=\"selected_model_${i}\" style=\"width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px\">\n          <option value=\"\">— Pick model —</option>\n          <optgroup label=\"CLASSIC\"><option>CLASSIC - Blue</option><option>CLASSIC - Red</option><option>CLASSIC - Black</option><option>CLASSIC - Purple</option></optgroup>\n          <optgroup label=\"OUTBACK\"><option>OUTBACK - Black</option><option>OUTBACK - Blue</option><option>OUTBACK - Green</option><option>OUTBACK - Red</option></optgroup>\n          <optgroup label=\"BANDITS\"><option>BANDITS - Camo</option><option>BANDITS - Green</option><option>BANDITS - Blue</option><option>BANDITS - Black</option></optgroup>\n          <optgroup label=\"RASTA\"><option>RASTA - Red</option><option>RASTA - Brown</option></optgroup>\n        </select>\n      </div>\n      <div style=\"display:flex;align-items:center;gap:8px\">\n        ${stars}\n        <input type=\"hidden\" name=\"rating_${i}\" id=\"star_val_${i}\" value=\"0\">\n        <span id=\"star_label_${i}\" style=\"font-size:11px;color:#aaa;margin-left:4px\">No stars = reject</span>\n      </div>\n    </div>\n  `;\n}\n\nconst html = `<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>DuberyMNL Caption Review</title>\n<style>\n  body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 16px; max-width: 600px; margin: 0 auto; }\n  h1 { font-size: 20px; margin-bottom: 4px; }\n  p { color: #666; font-size: 13px; margin-bottom: 20px; }\n  button { background: #16a34a; color: #fff; border: none; border-radius: 8px; padding: 14px 28px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 8px; }\n</style>\n</head>\n<body>\n<h1>DuberyMNL Weekly Captions</h1>\n<p>Tap stars to approve and rate. No stars = reject. Hit Submit when done.</p>\n<div id=\"filter-bar\" style=\"margin-bottom:16px\">\n  <label style=\"font-size:12px;font-weight:700;color:#666\">Filter: </label>\n  <select id=\"va-filter\" style=\"padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px\">\n    <option value=\"ALL\">All Anchors</option>\n    <option value=\"PERSON\">PERSON only</option>\n    <option value=\"PRODUCT\">PRODUCT only</option>\n  </select>\n</div>\n<form method=\"POST\" action=\"\">\n  ${cards}\n  <div style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n    <div style=\"font-size:13px;font-weight:700;color:#333;margin-bottom:8px\">Feedback for Agent (optional)</div>\n    <textarea name=\"feedback\" rows=\"3\" placeholder=\"e.g. More bundle captions. Fix Taglish ratio. More outdoor vibes.\" style=\"width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:14px;resize:vertical\"></textarea>\n    <div style=\"font-size:11px;color:#aaa;margin-top:4px\">Leave blank to skip. If filled, new captions will be generated after you submit.</div>\n  </div>\n  <button type=\"submit\">Submit Review</button>\n</form>\n<script>\ndocument.getElementById('va-filter').addEventListener('change', function() {\n  var val = this.value;\n  document.querySelectorAll('[data-anchor]').forEach(function(card) {\n    card.style.display = (val === 'ALL' || card.dataset.anchor === val) ? '' : 'none';\n  });\n});\ndocument.addEventListener('click', function(e) {\n  if (!e.target.classList.contains('star')) return;\n  var card = e.target.dataset.card;\n  var val = parseInt(e.target.dataset.star);\n  document.getElementById('star_val_' + card).value = val;\n  document.querySelectorAll('[data-card=\"' + card + '\"]').forEach(function(s) {\n    s.style.color = parseInt(s.dataset.star) <= val ? '#f59e0b' : '#ddd';\n  });\n  var label = document.getElementById('star_label_' + card);\n  if (label) label.textContent = val >= 3\n  ? val + ' star' + (val > 1 ? 's' : '') + ' — approved'\n  : val + ' star' + (val > 1 ? 's' : '') + ' — rejected';\n\n});\n</script>\n</body>\n</html>`\n\nreturn [{ json: { html } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -152,7 +152,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const ratings = $('Parse Form').first().json.ratings || {};\nconst now = new Date().toISOString();\n\nconst result = [];\nfor (let i = 0; i < items.length; i++) {\n  const row = items[i].json;\n  const rating = ratings[String(i)] || 0;\n  const decision = rating >= 3 ? 'approve' : 'reject';\n  result.push({\n    json: {\n      Timestamp: now,\n      Vibe: row.Vibe,\n      Model: row.Model,\n      Caption: row.Caption,\n      Hashtags: row.Hashtags,\n      Generated_At: row.Generated_At,\n      Rating: decision === 'approve' ? rating : null,\n      decision\n    }\n  });\n}\n\nreturn result;\n"
+        "jsCode": "const ratings = $('Parse Form').first().json.ratings || {};\nconst body = $('POST \u2014 Form Submission').first().json.body;\nconst now = new Date().toISOString();\n\nconst result = [];\nfor (let i = 0; i < items.length; i++) {\n  const row = items[i].json;\n  const rating = ratings[String(i)] || 0;\n  const decision = rating >= 3 ? 'approve' : 'reject';\n  result.push({\n    json: {\n      Timestamp: now,\n      Vibe: row.Vibe,\n      Model: row.Model,\n      Caption: row.Caption,\n      Hashtags: row.Hashtags,\n      Generated_At: row.Generated_At,\n      Visual_Anchor: row.Visual_Anchor,\n      Selected_Model: body['selected_model_' + i] || '',\n      Rating: decision === 'approve' ? rating : null,\n      decision\n    }\n  });\n}\n\nreturn result;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -273,6 +273,24 @@
               "canBeUsedToMatch": true
             },
             {
+              "id": "Visual_Anchor",
+              "displayName": "Visual_Anchor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Selected_Model",
+              "displayName": "Selected_Model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
               "id": "Rating ",
               "displayName": "Rating ",
               "required": false,
@@ -373,6 +391,24 @@
             {
               "id": "Generated_At",
               "displayName": "Generated_At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Visual_Anchor",
+              "displayName": "Visual_Anchor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Selected_Model",
+              "displayName": "Selected_Model",
               "required": false,
               "defaultMatch": false,
               "display": true,
