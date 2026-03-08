@@ -110,6 +110,10 @@ Scene: EDSA traffic, jeepney glare, UV Express, MRT, tricycle, e-bike, squinting
 Models: All models
 Tone: Self-aware Filipino humor, relatable commuter pain points across all ride types
 Hook ideas: glare, squinting, parang silaw, traffic, POV formats, "kahit anong sakay"
+1 of 5 captions in this vibe must be PRODUCT-anchored: product resting on a commuter
+surface — a jeepney ledge, bus window sill, dashboard, MRT seat. The city or commute
+context tells the story without a person in frame.
+4 of 5 remain PERSON-anchored.
 
 VIBE 2 — Outdoor / Tactical
 Scene: Trail, road trip, Tagaytay / La Union / Batangas drive, motorcycle, moto camping,
@@ -127,19 +131,19 @@ VIBE 3 — Urban / Streetwear
 Scene: City daily wear, sneaker/fit energy, Cubao/BGC/Marikina, street-level cool
 Models: All models
 Tone: Confident, subtle flex, "pa-cool" but grounded.
-1 of 5 captions in this vibe must be PRODUCT-anchored: product flat-lay on an urban
+2 of 5 captions in this vibe must be PRODUCT-anchored: product flat-lay on an urban
 surface — concrete, a café table, a sneaker box. Clean, editorial energy.
-4 of 5 remain PERSON-anchored.
+3 of 5 remain PERSON-anchored.
 Hook ideas: daily fit, clean look, porma check, effortless style
 
 VIBE 4 — Lifestyle / Culture
 Scene: Pinoy pride, Filipino identity, community, everyday life moments, Rasta as one flavor
 Models: All models
 Tone: Warm, proud, culturally grounded — lead with Pinoy identity, Rasta is a supporting vibe not the headline.
-2 of 5 captions in this vibe must be PRODUCT-anchored: aspirational and minimal.
+3 of 5 captions in this vibe must be PRODUCT-anchored: aspirational and minimal.
 Think short, atmospheric lines like "Sa bawat sunset." or "Pinoy pride, every golden hour."
 No person. Product in a scene. Tagline energy only.
-3 of 5 captions remain PERSON-anchored as normal.
+2 of 5 captions remain PERSON-anchored.
 Hook ideas: Pinoy pride, komunidad, kultura, golden hour, everyday Filipino moments, squad
 
 VIBE 5 — Sale / Urgency
@@ -148,6 +152,10 @@ Models: All models (pick whichever fits the hook)
 Tone: Urgent but not desperate. ₱699 is the hero. Metro Manila delivery is the closer.
 Hook ideas: same-day lang, ngayon na, last chance energy, "hindi na mas sulit pa dito"
 Constraints: Every caption MUST feature ₱699 prominently. CTA must have urgency ("Order na ngayon", "DM us now").
+2 of 5 captions in this vibe must be PRODUCT-anchored: product hero shot with dominant
+₱699 price display. Product on a premium surface (matte black table, concrete, marble).
+No person. The price IS the visual hook.
+3 of 5 remain PERSON-anchored.
 
 TONE DISTRIBUTION (mandatory):
 Exactly 3 of the 25 captions must use a slightly elevated, polished tone — confident
@@ -206,7 +214,9 @@ visual_anchor values:
   "PRODUCT" — caption concept centers on the product in a scene
 
 PRODUCT-anchor distribution per run (mandatory):
+  Vibe 1 (Commuter):  1 of 5 → visual_anchor: "PRODUCT"
   Vibe 2 (Outdoor):   2 of 5 → visual_anchor: "PRODUCT"
-  Vibe 3 (Urban):     1 of 5 → visual_anchor: "PRODUCT"
-  Vibe 4 (Lifestyle): 2 of 5 → visual_anchor: "PRODUCT"
-  All others:         visual_anchor: "PERSON"
+  Vibe 3 (Urban):     2 of 5 → visual_anchor: "PRODUCT"
+  Vibe 4 (Lifestyle): 3 of 5 → visual_anchor: "PRODUCT"
+  Vibe 5 (Sale):      2 of 5 → visual_anchor: "PRODUCT"
+  Total: 10 of 25 captions are PRODUCT-anchored

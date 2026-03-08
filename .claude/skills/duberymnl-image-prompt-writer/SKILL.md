@@ -67,6 +67,12 @@ Map to AIDA:
 Based on the analysis above and the `visual_anchor` hint,
 select ONE content type. Choose what best serves this caption.
 
+HARD RULE — visual_anchor enforcement:
+- If visual_anchor = "PRODUCT" → you MUST select TYPE B, C, D, or E.
+  TYPE A is forbidden for PRODUCT-anchored captions.
+- If visual_anchor = "PRODUCT" and caption analysis is ambiguous → default to TYPE D.
+- If visual_anchor = "PERSON" → TYPE A is preferred but all types remain available.
+
 TYPE A — PERSON + PRODUCT
   Use when: caption agitates a human pain point or experience.
   A person is the visual anchor. Product is worn or held.
@@ -135,6 +141,22 @@ in full detail based on the selected content type:
 TYPE A — Describe: subject(s), expression, emotion, body
   language, action, how the product is worn, lighting per
   area, composition, visual proof element.
+
+TYPE A — MULTI-SUBJECT (when Reference_Count > 1 AND visual_anchor = PERSON):
+  Describe N subjects, each wearing the model shown in their respective reference image.
+  Subject 1 → Reference Image 1 model. Subject 2 → Reference Image 2 model. Etc.
+  Describe group composition, interactions, individual expressions, and how each
+  person's sunglass model is distinctly visible.
+
+MULTI-PRODUCT (when Reference_Count > 1 AND visual_anchor = PRODUCT):
+  Check if all Reference_Models share the same base family (e.g., all "classic*" → CLASSIC SERIES).
+  If same family: frame as a Series shot — all color variants of that family arranged together
+  on a surface. Name it "DUBERY [FAMILY] SERIES" (e.g., "DUBERY CLASSIC SERIES").
+  Describe: all variants displayed together, each color distinctly visible, styled like a
+  product lineup ad.
+  If mixed families: describe each product individually — specific frame shape, color, and
+  lens per model. Arrange as a curated flat-lay or group display.
+  In both cases: no person in frame. Product arrangement IS the visual story.
 
 TYPE B — Describe: product placement on surface, surrounding
   props and objects, ambient lighting, depth of field,
@@ -217,6 +239,10 @@ frame, and how it connects to the overall concept.
 3. Ad must feel native to a Filipino's Facebook feed —
    authentic, not generic.
 4. Output the prompt only. No meta-commentary.
+5. When Reference_Count > 1:
+   - PERSON anchor: describe each subject wearing their respective reference model.
+   - PRODUCT anchor: apply Series logic (same family → series shot; mixed → curated display).
+   - Never collapse multiple references into a single generic description.
 
 ## Quality Benchmark
 A strong output leaves zero ambiguity. Every element described:
