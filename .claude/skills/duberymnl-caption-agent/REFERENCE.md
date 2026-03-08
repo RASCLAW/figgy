@@ -107,8 +107,8 @@ Do this once before the first Monday run.
    `Model | Colors | Drive_File_ID | Vibe`
 
 7. Seed the 11 sample captions above into `approved_content` rows 2–12.
-   Use today's date as Timestamp, assign the correct Vibe, "All Models" for Model,
-   add the hashtag line, and leave Generated_At blank (manual seed).
+   Use today's date as Timestamp, assign the correct Vibe,
+   add the hashtag line, and leave Generated_At and Model blank (manual seed).
 
 ---
 

@@ -171,6 +171,18 @@ TYPE D — Describe: product placement on surface or ground,
   sharp and recognizable), surrounding scene details,
   lighting quality.
 
+REFLECTION RULE (TYPE A and TYPE D):
+  The lens reflection must mirror the ACTUAL environment described
+  in the scene — not a generic city skyline or BGC buildings.
+  - If scene is a street market → reflect market stalls, vendors, crowd.
+  - If scene is a park → reflect trees, sky, open field.
+  - If scene is a beach → reflect waves, horizon, sand.
+  - If scene is a road/commute → reflect traffic, sky, road.
+  - NEVER default to BGC towers or Makati skyline unless the scene
+    is explicitly set there.
+  The reflection is visual proof that the lenses ARE polarized —
+  it must be scene-specific and immersive.
+
 TYPE E — Describe: product position, angle, each callout
   arrow and its label text, visual style of the callouts
   (arrows, bubbles, lines), overall layout of callouts
@@ -250,3 +262,15 @@ what it looks like, where it is, how the light behaves, what
 the person is feeling (if applicable), and how every overlay
 is styled and positioned. The entire prompt traces directly
 back to the Caption Analysis — nothing is arbitrary.
+
+## Setting Rule
+Sunglasses are outdoor products. The scene must justify wearing them.
+
+- DEFAULT: shoot outdoors — streets, markets, roads, parks, beaches, mountains.
+  Use specific Philippine locations when relevant (España, Quezon Ave, SM North,
+  Baguio, Mayon, Ilocos, etc.)
+- INDOOR is only allowed for PRODUCT-anchored shots (TYPE B, C, D, E).
+  Acceptable indoor settings: retail store, optical shop, studio, gym, café.
+- NEVER place a person wearing sunglasses in a casual indoor home setting
+  (living room, bedroom, kitchen, etc.). That is not where sunglasses are worn.
+- When in doubt: go outside.

@@ -1,5 +1,127 @@
 # SESSION LOG (Milestone-Based)
 
+## 2026-03-08 — WF3 END-TO-END VERIFIED + AGENT 1 PROMPT UPDATES ✅
+
+### What was accomplished
+- **WF3 first successful run**: Pick Caption fixed (Rating column had no trailing space — was reading wrong column). Polling loop added (IF node: Is Result Ready? checks `data.resultJson` not empty, loops back every 30s). image_log append working (all columns populated). Drive upload confirmed.
+- **Mark Caption Used**: fixed `row_number` → `_row_index` in URL expression.
+- **image_log formula error**: Value Input Option changed from USER_ENTERED → RAW (prevents `=` values being treated as formulas).
+- **Agent 1 Setting Rule added**: outdoor default, indoor only for product shots (TYPE B/C/D/E), never person indoors with sunglasses.
+- **Agent 1 Reflection Rule added**: lens must reflect actual scene, not BGC/Makati skyline. Scene-specific examples provided.
+- **Resolution changed**: Call Nano Banana 2 `resolution` changed 2K → 1K for mobile optimization.
+- **SKILL.md updated**: Setting Rule + Reflection Rule merged into repo file.
+- **WF3 JSON re-exported**: latest version saved to repo.
+
+### WF4 (Image Reviewer) — designed, not yet built
+- Mock Facebook post card UI per image
+- Like = Approve, Comment = Feedback, Share = silent for now
+- Rejected = logged, manual re-trigger
+- image_log needs 3 new columns: Review_Status, Review_Feedback, Reviewed_At
+- GET/POST webhook pattern same as WF2
+
+### Still pending
+- Add Review_Status, Review_Feedback, Reviewed_At columns to image_log sheet
+- Build WF4 in n8n
+
+---
+
+## 2026-03-08 — WF1/WF2 CLEANUP + REVIEW PAGE REDESIGN ✅
+
+### What was accomplished
+- **Read Feedback Execute Once fix**: was running 84× (once per upstream item). Execute Once ON → runs once. Root cause: Google Sheets blank-row padding (15 real rows + 69 blank = 84 items).
+- **"All Models" fully removed**: deleted from SKILL.md JSON output example, REFERENCE.md, WF1 n8n node (user pasted updated SKILL.md), repo JSON replaced with fresh export. `Model` column deleted from pending_review, approved_content, rejected_content sheets.
+- **WF2 Build Review HTML redesigned**: Facebook post card style — DuberyMNL avatar, Vibe tag, editable caption textarea, hashtags in blue, Like/Comment/Share bar (decorative), review controls (visual anchor, ref pickers, stars) in grey tray below.
+- **Progressive reference pickers**: only Reference 1 shown by default. Reference 2 reveals when Reference 1 is filled, etc. Clearing a picker hides and resets all subsequent ones.
+- **Editable captions**: caption is now a `<textarea>` — editable before submit. Tag Decisions reads `body['caption_' + i] || row.Caption` so edited text flows to approved_content sheet.
+- **Caption feedback node**: confirmed Read Feedback was missing Execute Once. Limit Feedback node discussed (slice -10 to keep last 10 real rows after filtering blanks).
+
+### What was learned
+- Execute Once OFF on Google Sheets read nodes = runs once per upstream item, not once per workflow. Same root cause every time — always check Execute Once first when a node outputs unexpectedly high item counts.
+- "All Models" was only in the JSON output example — removing it from there was enough to stop the agent from outputting it. LLMs mimic the example format directly.
+- Teaching protocol: RA learns better with step-by-step walkthroughs + ASCII visuals rather than full instruction dumps. Give one step, wait for confirmation before next.
+
+### Still pending
+- Limit Feedback node (Code node after Read Feedback, slice -10) — discussed but not yet built
+
+### End-to-end verified ✅ (2026-03-08)
+- Edited caption landed in approved_content ✅
+- Feedback text landed in feedback sheet ✅
+- pending_review cleared ✅
+- Trigger Regenerate removed — feedback no longer auto-triggers WF1. WF1 runs on schedule or manual trigger only.
+
+---
+
+## 2026-03-08 — VIBE RANDOMIZATION + AGENT MEMORY DESIGN (design only, not yet built)
+
+### What was discussed
+- LLM positional bias: models prefer vibes listed first (Commuter, Outdoor, Urban, Lifestyle).
+  "Freely" is too vague to overcome this without additional nudges.
+- Three randomization options: (1) prompt anti-bias rule, (2) random seed injection via Code node,
+  (3) run history — wf1_run_history tab tracks last 3 runs, injected into AI Agent to actively avoid repeating vibes
+- Vibe memory architecture designed (Option 3, recommended):
+  - New WF1 nodes: Read Run History → Format History (Code) → [AI Agent] → [Write Captions] → Save Run History
+  - wf1_run_history sheet tab: columns run_date, selected_vibes (comma-separated, Sale filtered out)
+  - Format History Code node builds "avoid these vibes" string from last 3 rows
+  - AI Agent user message: prepend history text + "Generate 25 captions now."
+  - SKILL.md rule 5 to add: "You will receive recent run vibes. Do NOT select any of those vibes."
+- 300-line system prompts confirmed safe for Gemini 2.5-flash (~5K tokens vs 1M limit)
+
+### What was learned
+- LLMs need structural entropy (shuffled list) or injected state (history to avoid) for genuine variety
+- The approved/rejected history pattern (Section 2 SKILL.md) is the same injection mechanism —
+  vibe history is just a new application of it
+- Vibe memory is NOT yet built in n8n — only designed. Pending: create sheet tab + 3 WF1 nodes + SKILL.md edit
+
+---
+
+## 2026-03-08 — WF1 CAPTION AGENT VIBE LIBRARY EXPANSION ✅
+
+### What was accomplished
+- `duberymnl-caption-agent/SKILL.md` fully restructured:
+  - Section 1: Added 21-term Filipino address vocabulary bank + 3x diversity rule
+  - Section 4: Replaced fixed 5-vibe structure with 16-vibe VIBE LIBRARY + VIBE SELECTION RULE
+    - Sale/Urgency always mandatory; model picks 4 more freely each run
+    - 16 vibes: 4 original + 12 new (Mirror Selfie, New Haircut, Content Creator, Motovlogger, Moto Camping, Palenke, Church, Walking Dog, Cat Parent, Toddler, Teenager, Chaos Energy)
+    - Each vibe has: Scene, Tone, Hook ideas, PRODUCT lean
+    - Commuter upgraded to "NCR Streets" — added España, Quezon Ave, SM North, Phil Arena
+    - Outdoor upgraded — added Mayon, Pinatubo, Baguio, Ilocos + specific PH tourist spots
+    - Lifestyle upgraded — added 9 sub-cultures (skate, hiphop, punk, tattoo, car, etc.)
+  - Section 4: TONE/BUNDLE/RULES blocks replaced with unified GLOBAL QUOTAS (10/25 PRODUCT, 5/25 bundle, 3/25 elevated tone)
+  - Section 5: `selected_vibes` added to JSON root; ID range labels made dynamic
+  - Old fixed per-vibe distribution table removed (was contradicting dynamic library)
+- SKILL.md is ready to paste into n8n WF1 Caption Generator node
+
+### What was learned
+- When vibes rotate dynamically, per-vibe hard PRODUCT counts become contradictory — global quota (10/25) is cleaner and more flexible
+- LLM contradictions between a stale reference table and a new rule can cause drift — always remove stale sections, don't just add new ones
+- Named Filipino locations (Mayon, Ilocos, Pinatubo) trigger emotional memory better than generic descriptors — specificity is a key scroll-stopping lever
+
+## 2026-03-08 — RECALIBRATION SESSION (WF2 + WF3 MULTI-REF COMPLETE ✅)
+
+### What was accomplished
+- Agent 1 system prompt (WF3): pasted into n8n. Contains HARD RULE (PRODUCT → TYPE B/C/D/E only), MULTI-SUBJECT + MULTI-PRODUCT variants, Hard Rule #5
+- Portfolio doc created: `docs/DUBERYMNL_PIPELINE.md` — architecture, AIDA mapping, prompt engineering rationale, decisions log
+- WF2 Build Review HTML: updated with 5 reference pickers + PERSON/PRODUCT toggle per card. Toggle defaults to Gemini's assigned visual_anchor; user can override before submitting
+- WF2 Tag Decisions: updated to join 5 model pickers into comma-separated Selected_Model; reads submitted visual_anchor toggle value
+- WF3 Lookup Reference Image: multi-model parsing (comma-separated → array of URLs + keys)
+- WF3 Call Nano Banana 2: image_input now uses `referenceImageUrls` array
+- WF3 Agent 1 user message: adds Reference_Count + Reference_Models fields
+- Both WF2 + WF3 JSONs exported to repo ✅
+- Memory rule added: NEVER replace existing working code — always ask for current code first, merge additions in
+
+### What was learned
+- `button[type="submit"]` CSS selector required when toggle buttons are on the same form — prevents green submit style bleeding onto PERSON/PRODUCT buttons
+- Tag Decisions bug caught: `d.Visual_Anchor` → `row.Visual_Anchor` (variable was named `row` in current scope, not `d`)
+- n8n Code node draft state: changes don't go live until Ctrl+S in n8n
+- Always re-download JSON from n8n after fixing a bug before copying to repo
+
+### Still pending
+- WF1 SKILL.md caption distribution update: bump PRODUCT quotas to 10/25 (Commuter +1, Urban +1, Lifestyle +1, Sale +2)
+- User manually pastes updated WF1 system prompt into n8n Caption Generator node
+- End-to-end verification: approve caption with 2-3 models, run WF3, confirm multi-ref + PRODUCT type selection working
+
+---
+
 ## 2026-03-07 (continued) — WF3 PIPELINE COMPLETE ✅
 
 ### WF3 Full Pipeline Verified Working

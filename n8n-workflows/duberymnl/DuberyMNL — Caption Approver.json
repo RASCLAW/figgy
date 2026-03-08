@@ -1,5 +1,5 @@
 {
-  "name": "DuberyMNL — Caption Approver",
+  "name": "DuberyMNL — Caption Approver WF2",
   "nodes": [
     {
       "parameters": {
@@ -23,8 +23,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        0,
-        0
+        80,
+        -544
       ],
       "id": "ea9d8c90-acf6-4f93-b5e9-5610ccfe4b66",
       "name": "GET — Review Page",
@@ -51,8 +51,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        208,
-        0
+        288,
+        -544
       ],
       "id": "af338e77-94bf-497b-aa66-81c1f6a58f82",
       "name": "Read Pending Captions",
@@ -65,13 +65,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const rows = items;\n\nlet cards = '';\nfor (let i = 0; i < rows.length; i++) {\n  const d = rows[i].json;\n\n  let stars = '';\n  for (let n = 1; n <= 5; n++) {\n    stars += '<span data-star=\"' + n + '\" data-card=\"' + i + '\" class=\"star\" style=\"font-size:28px;cursor:pointer;color:#ddd;line-height:1\">★</span>';\n  }\n\n  cards += `\n    <div data-anchor=\"${d.Visual_Anchor}\" style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n      <div style=\"font-size:11px;font-weight:700;color:#888;text-transform:uppercase;margin-bottom:4px\">${d.Vibe} · ${d.Model} · ${d.Visual_Anchor || '—'}</div>\n      <div style=\"font-size:15px;line-height:1.5;white-space:pre-wrap;margin-bottom:10px\">${d.Caption}</div>\n      <div style=\"font-size:12px;color:#aaa;margin-bottom:12px\">${d.Hashtags}</div>\n      <div style=\"margin-bottom:10px\">\n        <select name=\"selected_model_${i}\" style=\"width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;font-size:13px\">\n          <option value=\"\">— Pick model —</option>\n          <optgroup label=\"CLASSIC\"><option>CLASSIC - Blue</option><option>CLASSIC - Red</option><option>CLASSIC - Black</option><option>CLASSIC - Purple</option></optgroup>\n          <optgroup label=\"OUTBACK\"><option>OUTBACK - Black</option><option>OUTBACK - Blue</option><option>OUTBACK - Green</option><option>OUTBACK - Red</option></optgroup>\n          <optgroup label=\"BANDITS\"><option>BANDITS - Camo</option><option>BANDITS - Green</option><option>BANDITS - Blue</option><option>BANDITS - Black</option></optgroup>\n          <optgroup label=\"RASTA\"><option>RASTA - Red</option><option>RASTA - Brown</option></optgroup>\n        </select>\n      </div>\n      <div style=\"display:flex;align-items:center;gap:8px\">\n        ${stars}\n        <input type=\"hidden\" name=\"rating_${i}\" id=\"star_val_${i}\" value=\"0\">\n        <span id=\"star_label_${i}\" style=\"font-size:11px;color:#aaa;margin-left:4px\">No stars = reject</span>\n      </div>\n    </div>\n  `;\n}\n\nconst html = `<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>DuberyMNL Caption Review</title>\n<style>\n  body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 16px; max-width: 600px; margin: 0 auto; }\n  h1 { font-size: 20px; margin-bottom: 4px; }\n  p { color: #666; font-size: 13px; margin-bottom: 20px; }\n  button { background: #16a34a; color: #fff; border: none; border-radius: 8px; padding: 14px 28px; font-size: 16px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 8px; }\n</style>\n</head>\n<body>\n<h1>DuberyMNL Weekly Captions</h1>\n<p>Tap stars to approve and rate. No stars = reject. Hit Submit when done.</p>\n<div id=\"filter-bar\" style=\"margin-bottom:16px\">\n  <label style=\"font-size:12px;font-weight:700;color:#666\">Filter: </label>\n  <select id=\"va-filter\" style=\"padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px\">\n    <option value=\"ALL\">All Anchors</option>\n    <option value=\"PERSON\">PERSON only</option>\n    <option value=\"PRODUCT\">PRODUCT only</option>\n  </select>\n</div>\n<form method=\"POST\" action=\"\">\n  ${cards}\n  <div style=\"background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08)\">\n    <div style=\"font-size:13px;font-weight:700;color:#333;margin-bottom:8px\">Feedback for Agent (optional)</div>\n    <textarea name=\"feedback\" rows=\"3\" placeholder=\"e.g. More bundle captions. Fix Taglish ratio. More outdoor vibes.\" style=\"width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:14px;resize:vertical\"></textarea>\n    <div style=\"font-size:11px;color:#aaa;margin-top:4px\">Leave blank to skip. If filled, new captions will be generated after you submit.</div>\n  </div>\n  <button type=\"submit\">Submit Review</button>\n</form>\n<script>\ndocument.getElementById('va-filter').addEventListener('change', function() {\n  var val = this.value;\n  document.querySelectorAll('[data-anchor]').forEach(function(card) {\n    card.style.display = (val === 'ALL' || card.dataset.anchor === val) ? '' : 'none';\n  });\n});\ndocument.addEventListener('click', function(e) {\n  if (!e.target.classList.contains('star')) return;\n  var card = e.target.dataset.card;\n  var val = parseInt(e.target.dataset.star);\n  document.getElementById('star_val_' + card).value = val;\n  document.querySelectorAll('[data-card=\"' + card + '\"]').forEach(function(s) {\n    s.style.color = parseInt(s.dataset.star) <= val ? '#f59e0b' : '#ddd';\n  });\n  var label = document.getElementById('star_label_' + card);\n  if (label) label.textContent = val >= 3\n  ? val + ' star' + (val > 1 ? 's' : '') + ' — approved'\n  : val + ' star' + (val > 1 ? 's' : '') + ' — rejected';\n\n});\n</script>\n</body>\n</html>`\n\nreturn [{ json: { html } }];\n"
+        "jsCode": "const rows = items;\n\nconst modelOptions = `\n  <option value=\"\">— Pick model —</option>\n  <optgroup label=\"CLASSIC\"><option>CLASSIC - Blue</option><option>CLASSIC - Red</option><option>CLASSIC - Black</option><option>CLASSIC - Purple</option></optgroup>\n  <optgroup label=\"OUTBACK\"><option>OUTBACK - Black</option><option>OUTBACK - Blue</option><option>OUTBACK - Green</option><option>OUTBACK - Red</option></optgroup>\n  <optgroup label=\"BANDITS\"><option>BANDITS - Camo</option><option>BANDITS - Green</option><option>BANDITS - Blue</option><option>BANDITS - Black</option></optgroup>\n  <optgroup label=\"RASTA\"><option>RASTA - Red</option><option>RASTA - Brown</option></optgroup>\n`;\n\nconst refLabels = [\n  'Reference 1 — Primary / Subject 1',\n  'Reference 2 — Subject 2 (optional)',\n  'Reference 3 — Subject 3 (optional)',\n  'Reference 4 — Subject 4 (optional)',\n  'Reference 5 — Subject 5 (optional)',\n];\n\nlet cards = '';\nfor (let i = 0; i < rows.length; i++) {\n  const d = rows[i].json;\n  const anchor = d.Visual_Anchor || 'PERSON';\n\n  let stars = '';\n  for (let n = 1; n <= 5; n++) {\n    stars += '<span data-star=\"' + n + '\" data-card=\"' + i + '\" class=\"star\" style=\"font-size:22px;cursor:pointer;color:#ddd;line-height:1\">★</span>';\n  }\n\n  let refPickers = '';\n  for (let r = 0; r < refLabels.length; r++) {\n    const noneOpt = r === 0 ? '' : '<option value=\"\">— None —</option>';\n    const hidden = r > 0 ? 'display:none;' : '';\n    refPickers += `\n      <div id=\"ref_picker_${r}_${i}\" style=\"margin-bottom:5px;${hidden}\">\n        <label style=\"font-size:10px;color:#65676b;display:block;margin-bottom:2px\">${refLabels[r]}</label>\n        <select name=\"selected_model_${r + 1}_${i}\" id=\"ref_sel_${r}_${i}\"\n          style=\"width:100%;padding:6px;border:1px solid #ddd;border-radius:6px;font-size:12px\"\n          onchange=\"showNextRef(${r}, ${i}, this.value)\">\n          ${noneOpt}${modelOptions}\n        </select>\n      </div>\n    `;\n  }\n\n  const modelTag = d.Model && d.Model !== 'All Models'\n    ? `<div style=\"font-size:10px;color:#65676b;text-align:right;line-height:1.4\">${d.Model.replace(' - ', '<br>')}</div>`\n    : '';\n\n  cards += `\n    <div data-anchor=\"${anchor}\" style=\"background:#fff;border-radius:12px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.12);overflow:hidden\">\n\n      <div style=\"display:flex;align-items:center;gap:10px;padding:12px 14px 8px\">\n        <div style=\"width:38px;height:38px;border-radius:50%;background:#1877f2;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;flex-shrink:0\">D</div>\n        <div style=\"flex:1;min-width:0\">\n          <div style=\"font-size:14px;font-weight:700;color:#050505\">DuberyMNL</div>\n          <div style=\"font-size:11px;color:#65676b\">Just now · 🌐 · <span style=\"background:#f0f2f5;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700;color:#606770;text-transform:uppercase\">${d.Vibe}</span></div>\n        </div>\n        ${modelTag}\n      </div>\n\n      <div style=\"padding:0 14px 6px\">\n        <textarea name=\"caption_${i}\"\n          style=\"width:100%;box-sizing:border-box;border:none;outline:none;font-size:15px;line-height:1.55;color:#050505;resize:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:transparent;padding:0;overflow:hidden\"\n          oninput=\"this.style.height='auto';this.style.height=this.scrollHeight+'px'\"\n        >${d.Caption}</textarea>\n      </div>\n\n      <div style=\"padding:0 14px 10px;font-size:14px;color:#1877f2;line-height:1.5\">${d.Hashtags}</div>\n\n      <div style=\"border-top:1px solid #e4e6eb;display:flex;padding:2px 8px\">\n        <div style=\"flex:1;display:flex;align-items:center;justify-content:center;padding:6px 4px;font-size:13px;color:#65676b;font-weight:600;gap:4px;cursor:default\">👍 Like</div>\n        <div style=\"flex:1;display:flex;align-items:center;justify-content:center;padding:6px 4px;font-size:13px;color:#65676b;font-weight:600;gap:4px;cursor:default\">💬 Comment</div>\n        <div style=\"flex:1;display:flex;align-items:center;justify-content:center;padding:6px 4px;font-size:13px;color:#65676b;font-weight:600;gap:4px;cursor:default\">↗ Share</div>\n      </div>\n\n      <div style=\"background:#f7f8fa;border-top:1px solid #e4e6eb;padding:10px 14px\">\n\n        <div style=\"margin-bottom:8px\">\n          <label style=\"font-size:10px;color:#65676b;font-weight:700;display:block;margin-bottom:4px\">VISUAL ANCHOR</label>\n          <div style=\"display:flex;gap:6px\">\n            <button type=\"button\" id=\"anchor_person_${i}\" onclick=\"setAnchor(${i},'PERSON')\" style=\"flex:1;padding:5px;border-radius:6px;border:2px solid ${anchor === 'PERSON' ? '#1565c0' : '#ddd'};background:${anchor === 'PERSON' ? '#e3f2fd' : '#fff'};color:${anchor === 'PERSON' ? '#1565c0' : '#aaa'};font-size:11px;font-weight:700;cursor:pointer\">PERSON</button>\n            <button type=\"button\" id=\"anchor_product_${i}\" onclick=\"setAnchor(${i},'PRODUCT')\" style=\"flex:1;padding:5px;border-radius:6px;border:2px solid ${anchor === 'PRODUCT' ? '#2e7d32' : '#ddd'};background:${anchor === 'PRODUCT' ? '#e8f5e9' : '#fff'};color:${anchor === 'PRODUCT' ? '#2e7d32' : '#aaa'};font-size:11px;font-weight:700;cursor:pointer\">PRODUCT</button>\n          </div>\n          <input type=\"hidden\" name=\"visual_anchor_${i}\" id=\"anchor_val_${i}\" value=\"${anchor}\">\n        </div>\n\n        <div style=\"margin-bottom:8px\">${refPickers}</div>\n\n        <div style=\"display:flex;align-items:center;gap:6px\">\n          ${stars}\n          <input type=\"hidden\" name=\"rating_${i}\" id=\"star_val_${i}\" value=\"0\">\n          <span id=\"star_label_${i}\" style=\"font-size:11px;color:#65676b;margin-left:4px\">No stars = reject</span>\n        </div>\n      </div>\n    </div>\n  `;\n}\n\nconst html = `<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n<title>DuberyMNL Caption Review</title>\n<style>\n  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; padding: 12px; max-width: 500px; margin: 0 auto; }\n  h1 { font-size: 18px; margin-bottom: 2px; color: #050505; }\n  p { color: #65676b; font-size: 13px; margin-bottom: 14px; }\n  button[type=\"submit\"] { background: #1877f2; color: #fff; border: none; border-radius: 8px; padding: 12px 28px; font-size: 15px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 8px; }\n</style>\n</head>\n<body>\n<h1>DuberyMNL Caption Review</h1>\n<p>Tap stars to approve. Edit captions directly. Hit Submit when done.</p>\n<div id=\"filter-bar\" style=\"margin-bottom:12px\">\n  <label style=\"font-size:12px;font-weight:700;color:#65676b\">Filter: </label>\n  <select id=\"va-filter\" style=\"padding:5px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px\">\n    <option value=\"ALL\">All Anchors</option>\n    <option value=\"PERSON\">PERSON only</option>\n    <option value=\"PRODUCT\">PRODUCT only</option>\n  </select>\n</div>\n<form method=\"POST\" action=\"\">\n  ${cards}\n  <div style=\"background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,0.12)\">\n    <div style=\"font-size:13px;font-weight:700;color:#050505;margin-bottom:8px\">Feedback for Agent (optional)</div>\n    <textarea name=\"feedback\" rows=\"3\" placeholder=\"e.g. More bundle captions. Fix Taglish ratio. More outdoor vibes.\" style=\"width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:14px;resize:vertical\"></textarea>\n    <div style=\"font-size:11px;color:#aaa;margin-top:4px\">Leave blank to skip. If filled, new captions will be generated after submit.</div>\n  </div>\n  <button type=\"submit\">Submit Review</button>\n</form>\n<script>\ndocument.querySelectorAll('textarea[name^=\"caption_\"]').forEach(function(ta) {\n  ta.style.height = 'auto';\n  ta.style.height = ta.scrollHeight + 'px';\n});\n\nfunction showNextRef(r, i, val) {\n  if (val) {\n    var next = document.getElementById('ref_picker_' + (r + 1) + '_' + i);\n    if (next) next.style.display = '';\n  } else {\n    for (var j = r + 1; j < 5; j++) {\n      var el = document.getElementById('ref_picker_' + j + '_' + i);\n      if (el) {\n        el.style.display = 'none';\n        var sel = document.getElementById('ref_sel_' + j + '_' + i);\n        if (sel) sel.value = '';\n      }\n    }\n  }\n}\n\nfunction setAnchor(i, val) {\n  document.getElementById('anchor_val_' + i).value = val;\n  var p = document.getElementById('anchor_person_' + i);\n  var pr = document.getElementById('anchor_product_' + i);\n  p.style.borderColor = val === 'PERSON' ? '#1565c0' : '#ddd';\n  p.style.background = val === 'PERSON' ? '#e3f2fd' : '#fff';\n  p.style.color = val === 'PERSON' ? '#1565c0' : '#aaa';\n  pr.style.borderColor = val === 'PRODUCT' ? '#2e7d32' : '#ddd';\n  pr.style.background = val === 'PRODUCT' ? '#e8f5e9' : '#fff';\n  pr.style.color = val === 'PRODUCT' ? '#2e7d32' : '#aaa';\n}\n\ndocument.getElementById('va-filter').addEventListener('change', function() {\n  var val = this.value;\n  document.querySelectorAll('[data-anchor]').forEach(function(card) {\n    card.style.display = (val === 'ALL' || card.dataset.anchor === val) ? '' : 'none';\n  });\n});\n\ndocument.addEventListener('click', function(e) {\n  if (!e.target.classList.contains('star')) return;\n  var card = e.target.dataset.card;\n  var val = parseInt(e.target.dataset.star);\n  document.getElementById('star_val_' + card).value = val;\n  document.querySelectorAll('[data-card=\"' + card + '\"]').forEach(function(s) {\n    s.style.color = parseInt(s.dataset.star) <= val ? '#f59e0b' : '#ddd';\n  });\n  var label = document.getElementById('star_label_' + card);\n  if (label) label.textContent = val >= 3\n    ? val + ' star' + (val > 1 ? 's' : '') + ' — approved'\n    : val + ' star' + (val > 1 ? 's' : '') + ' — rejected';\n});\n</script>\n</body>\n</html>`;\n\nreturn [{ json: { html } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        416,
-        0
+        496,
+        -544
       ],
       "id": "1cf734ac-a11e-4987-9380-a80c4ecf62ce",
       "name": "Build Review HTML"
@@ -94,8 +94,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        624,
-        0
+        704,
+        -544
       ],
       "id": "f00d769c-cc00-4db0-994d-00544045b694",
       "name": "Serve Review Page"
@@ -152,7 +152,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const ratings = $('Parse Form').first().json.ratings || {};\nconst body = $('POST \u2014 Form Submission').first().json.body;\nconst now = new Date().toISOString();\n\nconst result = [];\nfor (let i = 0; i < items.length; i++) {\n  const row = items[i].json;\n  const rating = ratings[String(i)] || 0;\n  const decision = rating >= 3 ? 'approve' : 'reject';\n  result.push({\n    json: {\n      Timestamp: now,\n      Vibe: row.Vibe,\n      Model: row.Model,\n      Caption: row.Caption,\n      Hashtags: row.Hashtags,\n      Generated_At: row.Generated_At,\n      Visual_Anchor: row.Visual_Anchor,\n      Selected_Model: body['selected_model_' + i] || '',\n      Rating: decision === 'approve' ? rating : null,\n      decision\n    }\n  });\n}\n\nreturn result;\n"
+        "jsCode": "const ratings = $('Parse Form').first().json.ratings || {};\nconst body = $('POST — Form Submission').first().json.body;\nconst now = new Date().toISOString();\n\nconst result = [];\nfor (let i = 0; i < items.length; i++) {\n  const row = items[i].json;\n  const rating = ratings[String(i)] || 0;\n  const decision = rating >= 3 ? 'approve' : 'reject';\n\n  const selectedModel = [1, 2, 3, 4, 5]\n    .map(r => (body['selected_model_' + r + '_' + i] || '').trim())\n    .filter(Boolean)\n    .join(', ');\n\n  result.push({\n    json: {\n      Timestamp: now,\n      Vibe: row.Vibe,\n      Model: row.Model,\n      Caption: body['caption_' + i] || row.Caption,\n      Hashtags: row.Hashtags,\n      Generated_At: row.Generated_At,\n      Visual_Anchor: body['visual_anchor_' + i] || row.Visual_Anchor || 'PERSON',\n\n      Selected_Model: selectedModel,\n      Rating: decision === 'approve' ? rating : null,\n      decision\n    }\n  });\n}\n\nreturn result;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -190,7 +190,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        912,
+        896,
         -240
       ],
       "id": "39b84111-b07b-4cc0-8a5c-d7673ddd531b",
@@ -466,8 +466,8 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        2368,
-        -224
+        528,
+        32
       ],
       "id": "70e96cd1-84b5-4908-9e41-f17fd7dbc096",
       "name": "Send Confirmation"
@@ -495,8 +495,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1520,
-        -240
+        128,
+        32
       ],
       "id": "9df40840-b5af-43b6-8dbd-6ec722dfdcba",
       "name": "Clear Pending Queue",
@@ -559,8 +559,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        1728,
-        -240
+        336,
+        32
       ],
       "id": "57de118d-dfac-4726-9cbc-299864578f82",
       "name": "Write Feedback",
@@ -571,54 +571,6 @@
           "name": "Google Sheets account"
         }
       }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "69e3a961-3403-4a2f-aa71-dfae42c29b80",
-              "leftValue": "={{ $('POST — Form Submission').first().json.body.feedback }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        1936,
-        -240
-      ],
-      "id": "dda2bd10-01dd-41e7-974f-8ad243845d59",
-      "name": "Has Feedback?"
-    },
-    {
-      "parameters": {
-        "url": "http://localhost:5678/webhook/duberymnl-regenerate",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        2144,
-        -336
-      ],
-      "id": "981cd2a3-9f20-4815-90b4-f84c979f05f9",
-      "name": "Trigger Regenerate"
     }
   ],
   "pinData": {},
@@ -766,35 +718,6 @@
       "main": [
         [
           {
-            "node": "Has Feedback?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Has Feedback?": {
-      "main": [
-        [
-          {
-            "node": "Trigger Regenerate",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Send Confirmation",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Trigger Regenerate": {
-      "main": [
-        [
-          {
             "node": "Send Confirmation",
             "type": "main",
             "index": 0
@@ -807,9 +730,10 @@
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "489141d3-12b7-4da3-9c13-5d421331ce2e",
+  "versionId": "8168b0fe-87c6-4b67-ad36-0b6d44d30af4",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "8f5f556501a1bc089acc180bf8210118b142ca69e9a04b407b5e834f5e047cd4"

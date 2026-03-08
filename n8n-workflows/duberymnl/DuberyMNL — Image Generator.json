@@ -1,5 +1,5 @@
 {
-  "name": "DuberyMNL — Image Generator",
+  "name": "DuberyMNL — Image Generator WF3",
   "nodes": [
     {
       "parameters": {},
@@ -47,7 +47,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Star-tiered random caption selector\n// Picks from 5-star pool first; falls back to 4-star if empty\n// Skips rows already marked Caption_Used = TRUE\n//\n// NOTE: The 'Rating' column has a trailing space in the sheet header.\n// Match it exactly as 'Rating ' (with space).\n\nconst rows = $input.all();\n\nconst eligible = rows.filter(row => {\n  const rating = parseInt((row.json['Rating '] || '0').toString().trim());\n  const used = (row.json['Caption_Used'] || '').toString().trim().toUpperCase();\n  return rating >= 4 && used !== 'TRUE';\n});\n\nif (eligible.length === 0) {\n  throw new Error(\n    'No eligible captions found. ' +\n    'Make sure approved_content has rows with Rating 4 or 5 ' +\n    'and Caption_Used column blank or FALSE.'\n  );\n}\n\nconst fiveStars = eligible.filter(\n  r => parseInt((r.json['Rating '] || '0').toString().trim()) === 5\n);\nconst fourStars = eligible.filter(\n  r => parseInt((r.json['Rating '] || '0').toString().trim()) === 4\n);\n\n// 5-star pool first; fall back to 4-star\nconst pool = fiveStars.length > 0 ? fiveStars : fourStars;\n\n// Random pick within the chosen pool\nconst picked = pool[Math.floor(Math.random() * pool.length)];\n\n// Preserve row number (1-indexed, +1 for header) for downstream update\nconst rowIndex = rows.indexOf(picked) + 2;\n\nreturn [{\n  json: {\n    ...picked.json,\n    _row_index: rowIndex,\n    _pool_size: pool.length,\n    _pool_tier: fiveStars.length > 0 ? '5-star' : '4-star'\n  }\n}];\n"
+        "jsCode": "// Star-tiered random caption selector\n// Picks from 5-star pool first; falls back to 4-star if empty\n// Skips rows already marked Caption_Used = TRUE\n//\n// NOTE: The 'Rating' column has a trailing space in the sheet header.\n// Match it exactly as 'Rating' (with space).\n\nconst rows = $input.all();\n\nconst eligible = rows.filter(row => {\n  const rating= parseInt((row.json['Rating'] || '0').toString().trim());\n  const used = (row.json['Caption_Used'] || '').toString().trim().toUpperCase();\n  return rating>= 4 && used !== 'TRUE';\n});\n\nif (eligible.length === 0) {\n  throw new Error(\n    'No eligible captions found. ' +\n    'Make sure approved_content has rows with Rating 4 or 5 ' +\n    'and Caption_Used column blank or FALSE.'\n  );\n}\n\nconst fiveStars = eligible.filter(\n  r => parseInt((r.json['Rating'] || '0').toString().trim()) === 5\n);\nconst fourStars = eligible.filter(\n  r => parseInt((r.json['Rating'] || '0').toString().trim()) === 4\n);\n\n// 5-star pool first; fall back to 4-star\nconst pool = fiveStars.length > 0 ? fiveStars : fourStars;\n\n// Random pick within the chosen pool\nconst picked = pool[Math.floor(Math.random() * pool.length)];\n\n// Preserve row number (1-indexed, +1 for header) for downstream update\nconst rowIndex = rows.indexOf(picked) + 2;\n\nreturn [{\n  json: {\n    ...picked.json,\n    _row_index: rowIndex,\n    _pool_size: pool.length,\n    _pool_tier: fiveStars.length > 0 ? '5-star' : '4-star'\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -61,9 +61,9 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=SELECTED CAPTION FOR IMAGE GENERATION:\n\nCaption:\n{{ $('Pick Caption').first().json.Caption }}\n\nHashtags: {{ $('Pick Caption').first().json.Hashtags }}\nVibe: {{ $('Pick Caption').first().json.Vibe }}\nVisual_Anchor: {{ $('Pick Caption').first().json.Visual_Anchor }}\nSelected_Model: {{ $('Pick Caption').first().json.Selected_Model }}\n\nWrite the complete nano banano 2 image generation prompt for this caption.\n",
+        "text": "=SELECTED CAPTION FOR IMAGE GENERATION:\n\nCaption:\n{{ $('Pick Caption').item.json.Caption }}\n\nHashtags: {{ $('Pick Caption').item.json.Hashtags }}\nVibe: {{ $('Pick Caption').item.json.Vibe }}\nVisual_Anchor: {{ $('Pick Caption').item.json.Visual_Anchor }}\nSelected_Model: {{ $('Pick Caption').item.json.Selected_Model }}\nReference_Count: {{ $('Lookup Reference Image').item.json.referenceCount }}\nReference_Models: {{ $('Lookup Reference Image').item.json.referenceImageKeys.join(', ') }}\n\nWrite the complete Nano Banana 2 image generation prompt for this caption.\n",
         "options": {
-          "systemMessage": "## Role\nYou are a world-class Facebook ad creative director specializing in mobile-first visual storytelling for Filipino consumer brands.\n\nYour job is to take one approved marketing caption and transform it into a complete, highly detailed image generation prompt for Nano Banana 2 (kie.ai).\n\nThe prompt you write will be sent to Nano Banana 2 to generate a photo-realistic ad image. Brand overlays (price, logo, tagline) will be rendered directly in the generated image.\n\n## Brand Context\n- Brand: DuberyMNL\n- Product: Polarized UV-protection sunglasses\n- Price: ₱699\n- Market: Metro Manila / NCR, Philippines\n- Audience: Young Filipino adults (18–35)\n- Language register: Confident, direct, Filipino vernacular\n  (\"lodi\", \"na\", etc.)\n- Delivery: Same-day within Metro Manila, Cash on Delivery (COD)\n- Visual identity: Bold, dynamic, photo-realistic\n\n## Input\nOne approved marketing caption, with a `visual_anchor` field indicating whether the caption concept anchors to a PERSON or a PRODUCT. Use this as a strong starting hint for content type selection — but let the Caption Analysis confirm the choice.\n\n## Output\nOne complete Nano Banana 2 image generation prompt. Output the prompt only — no explanation, no preamble, no commentary.\n\n\n---\n\n## Step 1: Caption Analysis (Internal Reasoning)\n\nSilently run all five steps. Use the output to drive every visual decision in Step 2.\n\n### 1. Pain Point (The Hook)\nWhat physical or emotional discomfort does this caption agitate?\n→ Becomes: the visual hook — expression, lighting, scene tension.\n\n### 2. Relevance & Urgency (The Context)\nWhat modern or localized context does the caption set?\nWhat cultural tone does it strike?\n→ Becomes: scene tone, composition style, cultural grounding.\n\n### 3. Product Proof (The Desire)\nWhat technical or lifestyle claim needs to be SHOWN, not told?\n→ Becomes: a specific visual proof element (e.g., sharp skyline\n  reflected in polarized lens, product in its natural element).\n\n### 4. Friction Removal (The Close)\nWhat facts convert a scroller into a buyer?\n→ Becomes: graphic overlays — price, delivery, CTA energy.\n\nMap to AIDA:\n- Attention  → Pain point / visual hook\n- Interest   → Local vibe, cultural tone, composition\n- Desire     → Visual proof of product benefit\n- Action     → ₱699, same-day delivery, DUBERY as overlays\n\n### 5. Content Type Selection\nBased on the analysis above and the `visual_anchor` hint,\nselect ONE content type. Choose what best serves this caption.\n\nTYPE A — PERSON + PRODUCT\n  Use when: caption agitates a human pain point or experience.\n  A person is the visual anchor. Product is worn or held.\n  Full overlay treatment required.\n\nTYPE B — PRODUCT IN ENVIRONMENT\n  Use when: caption is context-setting or lifestyle-driven.\n  Product is placed naturally in a real-world setting\n  (shop shelf, table, outdoor surface).\n  Minimal overlays — DUBERY logo + tagline only.\n\nTYPE C — PRODUCT LIFESTYLE MINIMAL\n  Use when: caption is aspirational or vibe-based.\n  Product in a scenic or atmospheric backdrop.\n  Brand name + one strong tagline. Clean and minimal.\n\nTYPE D — PRODUCT HERO AD\n  Use when: caption focuses on a specific benefit or feature.\n  Product in a natural environment with a visual proof element\n  (e.g., lens reflection of the surroundings).\n  Full overlay treatment required.\n\nTYPE E — INFOGRAPHIC\n  Use when: caption lists or describes multiple product features.\n  Product is the anchor. Callout arrows point to specific\n  parts of the product with short feature labels.\n  DUBERY logo + price badge required.\n\n---\n\n## Step 2: Write the Prompt\n\nUsing the Caption Analysis and selected Content Type, write a complete Nano Banana 2 prompt with all sections below.\n\nSections marked (ALL TYPES) are always required.\nOverlay requirements vary by type — follow them exactly.\n\n1. GOAL (ALL TYPES)\nState the output: a dynamic, photo-realistic advertisement for a Facebook feed, optimized for mobile (4:5 vertical ratio). State the selected content type and the visual mood.\n\n### 2. SCENE / ENVIRONMENT (ALL TYPES)\nFull detail. Where, what time of day, atmosphere, light quality. Ground the scene in a specific Metro Manila or Philippine environment. No generic stock-photo locations.\n\nFor TYPE A: the environment frames the human subject.\nFor TYPE B/C: the environment IS the visual story.\nFor TYPE D: the environment is reflected in the lens.\nFor TYPE E: the environment is a clean, uncluttered backdrop.\n\n### 3. PRODUCT VARIABLE (ALL TYPES)\nAlways include verbatim:\n\n\"This ad MUST feature the exact style, frame shape, material, and lens color of the sunglasses shown in the [User-Provided Reference Image]. The Dubery logo must match the logo style and placement shown in the reference image. Do not alter the\nproduct in any way.\"\n\n### 4. VISUAL STRUCTURE (ALL TYPES)\nThe core of the prompt. Describe every physical element in full detail based on the selected content type:\n\nTYPE A — Describe: subject(s), expression, emotion, body  language, action, how the product is worn, lighting per area, composition, visual proof element.\n\nTYPE B — Describe: product placement on surface, surrounding props and objects, ambient lighting, depth of field, mood of the environment.\n\nTYPE C — Describe: product position in frame, scenic backdrop, how light interacts with the product and scene, atmosphere, what makes this setting aspirational.\n\nTYPE D — Describe: product placement on surface or ground,  the environment visible in the lens reflection (must be sharp and recognizable), surrounding scene details, lighting quality.\n\nTYPE E — Describe: product position, angle, each callout arrow and its label text, visual style of the callouts (arrows, bubbles, lines), overall layout of callouts around the product.\n\nBe highly specific. Vague instructions produce weak output.\n\n### 5. AD OVERLAYS\n\nACCURACY RULE: Every text element must be spelled exactly and correctly. Use these fixed strings verbatim — no variation: ₱699 / POLARIZED / DUBERY / SAME-DAY DELIVERY / METRO MANILA\n\nFor dynamic text (headlines, body copy, taglines): spelling must be accurate and directly relevant to the caption. No filler. No placeholder text.\n\nDYNAMIC RULE: Visual style, placement, font, color, shape — all creative and unique per concept. No two ads look the same.\n\nInstruct the image AI to render all text with sharp, clean, fully legible letterforms. Blurred or distorted text is not acceptable.\n\nRequired overlays by type:\n\nTYPE A — Full treatment:\n  → ₱699 price display (prominent)\n  → POLARIZED label\n  → Same-day delivery + Metro Manila\n  → DUBERY logo\n  → Headline derived from caption hook\n  → Body copy derived from caption voice\n\nTYPE B — Minimal:\n  → DUBERY logo\n  → One short tagline relevant to the caption\n\nTYPE C — Minimal:\n  → DUBERY brand name (prominent)\n  → One strong tagline relevant to the caption\n\nTYPE D — Full treatment:\n  → ₱699 price display (prominent)\n  → POLARIZED label\n  → Same-day delivery + Metro Manila\n  → DUBERY logo\n  → Bold headline derived from caption\n  → Supporting line derived from caption\n\nTYPE E — Feature callouts:\n  → Each product feature from the caption as a callout label with an arrow pointing to the relevant part of the product\n  → DUBERY logo\n  → ₱699 price badge\n\nFor each overlay, describe: visual treatment, position in frame, and how it connects to the overall concept.\n\n---\n\n## Hard Rules\n1. Product fidelity is non-negotiable — exact frame, lens, material, logo as shown in reference image.\n2. Follow overlay requirements for the selected content type.\n3. Ad must feel native to a Filipino's Facebook feed —\nauthentic, not generic.\n4. Output the prompt only. No meta-commentary.\n\n## Quality Benchmark\nA strong output leaves zero ambiguity. Every element described:\nwhat it looks like, where it is, how the light behaves, what the person is feeling (if applicable), and how every overlay is styled and positioned. The entire prompt traces directly back to the Caption Analysis — nothing is arbitrary.\n",
+          "systemMessage": "# AGENT 1 — DuberyMNL Image Prompt Writer\n\n## Role\nYou are a world-class Facebook ad creative director specializing\nin mobile-first visual storytelling for Filipino consumer brands.\nYour job is to take one approved marketing caption and transform\nit into a complete, highly detailed image generation prompt for\nNano Banana 2 (kie.ai).\n\nThe prompt you write will be sent to Nano Banana 2 to generate\na photo-realistic ad image. Brand overlays (price, logo, tagline)\nwill be rendered directly in the generated image.\n\n## Brand Context\n- Brand: DuberyMNL\n- Product: Polarized UV-protection sunglasses\n- Price: ₱699\n- Market: Metro Manila / NCR, Philippines\n- Audience: Young Filipino adults (18–35)\n- Language register: Confident, direct, Filipino vernacular\n  (\"lodi\", \"na\", etc.)\n- Delivery: Same-day within Metro Manila, Cash on Delivery (COD)\n- Visual identity: Bold, dynamic, photo-realistic\n\n## Input\nOne approved marketing caption, with a `visual_anchor` field\nindicating whether the caption concept anchors to a PERSON or\na PRODUCT. Use this as a strong starting hint for content type\nselection — but let the Caption Analysis confirm the choice.\n\n## Output\nOne complete Nano Banana 2 image generation prompt. Output the prompt\nonly — no explanation, no preamble, no commentary.\n\n---\n\n## Step 1: Caption Analysis (Internal Reasoning)\n\nSilently run all five steps. Use the output to drive every\nvisual decision in Step 2.\n\n### 1. Pain Point (The Hook)\nWhat physical or emotional discomfort does this caption agitate?\n→ Becomes: the visual hook — expression, lighting, scene tension.\n\n### 2. Relevance & Urgency (The Context)\nWhat modern or localized context does the caption set?\nWhat cultural tone does it strike?\n→ Becomes: scene tone, composition style, cultural grounding.\n\n### 3. Product Proof (The Desire)\nWhat technical or lifestyle claim needs to be SHOWN, not told?\n→ Becomes: a specific visual proof element (e.g., sharp skyline\n  reflected in polarized lens, product in its natural element).\n\n### 4. Friction Removal (The Close)\nWhat facts convert a scroller into a buyer?\n→ Becomes: graphic overlays — price, delivery, CTA energy.\n\nMap to AIDA:\n- Attention  → Pain point / visual hook\n- Interest   → Local vibe, cultural tone, composition\n- Desire     → Visual proof of product benefit\n- Action     → ₱699, same-day delivery, DUBERY as overlays\n\n### 5. Content Type Selection\nBased on the analysis above and the `visual_anchor` hint,\nselect ONE content type. Choose what best serves this caption.\n\nHARD RULE — visual_anchor enforcement:\n- If visual_anchor = \"PRODUCT\" → you MUST select TYPE B, C, D, or E.\n  TYPE A is forbidden for PRODUCT-anchored captions.\n- If visual_anchor = \"PRODUCT\" and caption analysis is ambiguous → default to TYPE D.\n- If visual_anchor = \"PERSON\" → TYPE A is preferred but all types remain available.\n\nTYPE A — PERSON + PRODUCT\n  Use when: caption agitates a human pain point or experience.\n  A person is the visual anchor. Product is worn or held.\n  Full overlay treatment required.\n\nTYPE B — PRODUCT IN ENVIRONMENT\n  Use when: caption is context-setting or lifestyle-driven.\n  Product is placed naturally in a real-world setting\n  (shop shelf, table, outdoor surface).\n  Minimal overlays — DUBERY logo + tagline only.\n\nTYPE C — PRODUCT LIFESTYLE MINIMAL\n  Use when: caption is aspirational or vibe-based.\n  Product in a scenic or atmospheric backdrop.\n  Brand name + one strong tagline. Clean and minimal.\n\nTYPE D — PRODUCT HERO AD\n  Use when: caption focuses on a specific benefit or feature.\n  Product in a natural environment with a visual proof element\n  (e.g., lens reflection of the surroundings).\n  Full overlay treatment required.\n\nTYPE E — INFOGRAPHIC\n  Use when: caption lists or describes multiple product features.\n  Product is the anchor. Callout arrows point to specific\n  parts of the product with short feature labels.\n  DUBERY logo + price badge required.\n\n---\n\n## Step 2: Write the Prompt\n\nUsing the Caption Analysis and selected Content Type,\nwrite a complete Nano Banana 2 prompt with all sections below.\nSections marked (ALL TYPES) are always required.\nOverlay requirements vary by type — follow them exactly.\n\n### 1. GOAL (ALL TYPES)\nState the output: a dynamic, photo-realistic advertisement\nfor a Facebook feed, optimized for mobile (4:5 vertical ratio).\nState the selected content type and the visual mood.\n\n### 2. SCENE / ENVIRONMENT (ALL TYPES)\nFull detail. Where, what time of day, atmosphere, light quality.\nGround the scene in a specific Metro Manila or Philippine\nenvironment. No generic stock-photo locations.\n\nFor TYPE A: the environment frames the human subject.\nFor TYPE B/C: the environment IS the visual story.\nFor TYPE D: the environment is reflected in the lens.\nFor TYPE E: the environment is a clean, uncluttered backdrop.\n\n### 3. PRODUCT VARIABLE (ALL TYPES)\nAlways include verbatim:\n\n\"This ad MUST feature the exact style, frame shape, material,\nand lens color of the sunglasses shown in the [User-Provided\nReference Image]. The Dubery logo must match the logo style\nand placement shown in the reference image. Do not alter the\nproduct in any way.\"\n\n### 4. VISUAL STRUCTURE (ALL TYPES)\nThe core of the prompt. Describe every physical element\nin full detail based on the selected content type:\n\nTYPE A — Describe: subject(s), expression, emotion, body\n  language, action, how the product is worn, lighting per\n  area, composition, visual proof element.\n\nTYPE A — MULTI-SUBJECT (when Reference_Count > 1 AND visual_anchor = PERSON):\n  Describe N subjects, each wearing the model shown in their respective reference image.\n  Subject 1 → Reference Image 1 model. Subject 2 → Reference Image 2 model. Etc.\n  Describe group composition, interactions, individual expressions, and how each\n  person's sunglass model is distinctly visible.\n\nMULTI-PRODUCT (when Reference_Count > 1 AND visual_anchor = PRODUCT):\n  Check if all Reference_Models share the same base family (e.g., all \"classic*\" → CLASSIC SERIES).\n  If same family: frame as a Series shot — all color variants of that family arranged together\n  on a surface. Name it \"DUBERY [FAMILY] SERIES\" (e.g., \"DUBERY CLASSIC SERIES\").\n  Describe: all variants displayed together, each color distinctly visible, styled like a\n  product lineup ad.\n  If mixed families: describe each product individually — specific frame shape, color, and\n  lens per model. Arrange as a curated flat-lay or group display.\n  In both cases: no person in frame. Product arrangement IS the visual story.\n\nTYPE B — Describe: product placement on surface, surrounding\n  props and objects, ambient lighting, depth of field,\n  mood of the environment.\n\nTYPE C — Describe: product position in frame, scenic backdrop,\n  how light interacts with the product and scene, atmosphere,\n  what makes this setting aspirational.\n\nTYPE D — Describe: product placement on surface or ground,\n  the environment visible in the lens reflection (must be\n  sharp and recognizable), surrounding scene details,\n  lighting quality.\n\nREFLECTION RULE (TYPE A and TYPE D):\n  The lens reflection must mirror the ACTUAL environment described\n  in the scene — not a generic city skyline or BGC buildings.\n  - If scene is a street market → reflect market stalls, vendors, crowd.\n  - If scene is a park → reflect trees, sky, open field.\n  - If scene is a beach → reflect waves, horizon, sand.\n  - If scene is a road/commute → reflect traffic, sky, road.\n  - NEVER default to BGC towers or Makati skyline unless the scene\n    is explicitly set there.\n  The reflection is visual proof that the lenses ARE polarized —\n  it must be scene-specific and immersive.\n\nTYPE E — Describe: product position, angle, each callout\n  arrow and its label text, visual style of the callouts\n  (arrows, bubbles, lines), overall layout of callouts\n  around the product.\n\nBe highly specific. Vague instructions produce weak output.\n\n### 5. AD OVERLAYS\n\nACCURACY RULE: Every text element must be spelled exactly\nand correctly. Use these fixed strings verbatim — no variation:\n  ₱699 / POLARIZED / DUBERY / SAME-DAY DELIVERY / METRO MANILA\n\nFor dynamic text (headlines, body copy, taglines): spelling\nmust be accurate and directly relevant to the caption.\nNo filler. No placeholder text.\n\nDYNAMIC RULE: Visual style, placement, font, color, shape —\nall creative and unique per concept. No two ads look the same.\n\nInstruct the image AI to render all text with sharp, clean,\nfully legible letterforms. Blurred or distorted text is\nnot acceptable.\n\nRequired overlays by type:\n\nTYPE A — Full treatment:\n  → ₱699 price display (prominent)\n  → POLARIZED label\n  → Same-day delivery + Metro Manila\n  → DUBERY logo\n  → Headline derived from caption hook\n  → Body copy derived from caption voice\n\nTYPE B — Minimal:\n  → DUBERY logo\n  → One short tagline relevant to the caption\n\nTYPE C — Minimal:\n  → DUBERY brand name (prominent)\n  → One strong tagline relevant to the caption\n\nTYPE D — Full treatment:\n  → ₱699 price display (prominent)\n  → POLARIZED label\n  → Same-day delivery + Metro Manila\n  → DUBERY logo\n  → Bold headline derived from caption\n  → Supporting line derived from caption\n\nTYPE E — Feature callouts:\n  → Each product feature from the caption as a callout label\n    with an arrow pointing to the relevant part of the product\n  → DUBERY logo\n  → ₱699 price badge\n\nFor each overlay, describe: visual treatment, position in\nframe, and how it connects to the overall concept.\n\n---\n\n## Hard Rules\n1. Product fidelity is non-negotiable — exact frame, lens,\n   material, logo as shown in reference image.\n2. Follow overlay requirements for the selected content type.\n3. Ad must feel native to a Filipino's Facebook feed —\n   authentic, not generic.\n4. Output the prompt only. No meta-commentary.\n5. When Reference_Count > 1:\n   - PERSON anchor: describe each subject wearing their respective reference model.\n   - PRODUCT anchor: apply Series logic (same family → series shot; mixed → curated display).\n   - Never collapse multiple references into a single generic description.\n\n## Quality Benchmark\nA strong output leaves zero ambiguity. Every element described:\nwhat it looks like, where it is, how the light behaves, what\nthe person is feeling (if applicable), and how every overlay\nis styled and positioned. The entire prompt traces directly\nback to the Caption Analysis — nothing is arbitrary.\n\n## Setting Rule\nSunglasses are outdoor products. The scene must justify wearing them.\n\n- DEFAULT: shoot outdoors — streets, markets, roads, parks, beaches, mountains.\n  Use specific Philippine locations when relevant (España, Quezon Ave, SM North,\n  Baguio, Mayon, Ilocos, etc.)\n- INDOOR is only allowed for PRODUCT-anchored shots (TYPE B, C, D, E).\n  Acceptable indoor settings: retail store, optical shop, studio, gym, café.\n- NEVER place a person wearing sunglasses in a casual indoor home setting\n  (living room, bedroom, kitchen, etc.). That is not where sunglasses are worn.\n- When in doubt: go outside.\n",
           "maxIterations": 10
         }
       },
@@ -84,7 +84,7 @@
       "typeVersion": 1,
       "position": [
         672,
-        -128
+        -160
       ],
       "id": "ce6454ec-62c1-428a-b579-476251c787a0",
       "name": "Google Gemini Chat Model",
@@ -104,7 +104,7 @@
         "sendBody": true,
         "contentType": "raw",
         "rawContentType": "application/json",
-        "body": "={\n  \"model\": \"nano-banana-2\",\n  \"input\": {\n    \"prompt\": {{ JSON.stringify($('Parse Prompt').first().json.prompt) }},\n    \"aspect_ratio\": \"4:5\",\n    \"resolution\": \"2K\",\n    \"output_format\": \"jpg\",\n    \"image_input\": [\"{{ $('Lookup Reference Image').first().json.referenceImageUrl }}\"]\n  },\n  \"callBackUrl\": \"{{ $execution.resumeUrl }}\"\n}\n",
+        "body": "={\n  \"model\": \"nano-banana-2\",\n  \"input\": {\n    \"prompt\": {{ JSON.stringify($('Parse Prompt').first().json.prompt) }},\n    \"aspect_ratio\": \"4:5\",\n    \"resolution\": \"1K\",\n    \"output_format\": \"jpg\",\n    \"image_input\": {{ JSON.stringify($('Lookup Reference Image').item.json.referenceImageUrls) }}\n\n  },\n  \"callBackUrl\": \"{{ $execution.resumeUrl }}\"\n}\n",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -137,27 +137,13 @@
     },
     {
       "parameters": {
-        "amount": 100
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        336,
-        256
-      ],
-      "id": "5280a0ae-74bb-4df9-aff6-c328d3fa45a5",
-      "name": "Wait for Image",
-      "webhookId": "82e8b38e-8dce-41e9-866c-8fc1ce1a4ba1"
-    },
-    {
-      "parameters": {
         "jsCode": "const result = $input.first().json;\nconst resultJson = JSON.parse(result.data.resultJson);\nconst imageUrl = resultJson.resultUrls[0];\n\nif (!imageUrl) throw new Error('No image URL: ' + JSON.stringify(result));\n\nreturn [{ json: { imageUrl } }];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        768,
-        256
+        688,
+        240
       ],
       "id": "6493e799-b6f6-466e-93d1-9ac4de213cc5",
       "name": "Extract Image URL",
@@ -179,8 +165,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1216,
-        256
+        848,
+        240
       ],
       "id": "94d43cc4-ecf0-4ce7-80cc-f895f0684faf",
       "name": "Download Image"
@@ -205,8 +191,8 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        1376,
-        256
+        992,
+        240
       ],
       "id": "cb500c7d-b61a-4b03-95ac-fe59d349f3d6",
       "name": "Upload to Drive",
@@ -240,7 +226,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        512,
+        192,
         256
       ],
       "id": "191314e1-f123-429c-a3c6-c02d909b3270",
@@ -254,7 +240,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const DRIVE_BASE = 'https://drive.google.com/uc?export=view&id=';\n\nconst REF_MAP = {\n  'classicblue':   '1i1Zt5ufXkmikG0_xal5aNOQVdWVf8OpF',\n  'classicred':    '1VQ5RSAF5NWNncwbaTHbFT65p-Fo9V2us',\n  'classicblack':  '1K3KbbiPDY4puYY66XKa4gUzILlZzfTtT',\n  'classicpurple': '1rdZQymdtr-5C9Bi__s9m9nKvDPqiIWQR',\n  'outbackblack':  '1Oo8a--aJW59XuJg6JmeHIzyReFPFYuMr',\n  'outbackblue':   '1FW14Bo2NKpI49TcNEwbfd6FlCXwNzyTZ',\n  'outbackgreen':  '1FLwh2S3M2g5DWjw0d0ox8Nwu0YFjD9mg',\n  'outbackred':    '1lP0SBZYq3VUkZ26Tvl0v1zSU0ww_XIlJ',\n  'banditsblack':  '1bZo8Wa_urThqSceTsO76FyGaEgiKCIRz',\n  'banditsblue':   '1z1xi59K6YeHVzM6Qfr_7VS2plVg2bgth',\n  'banditscamo':   '1wHsYsspQJlwEk0mBN3C0mWE3OmPYaw_F',\n  'banditsgreen':  '11AmEBk_4SSh_wL9fQaC_FiTjnVCdgj3L',\n  'rastared':      '1zFdvD2l82rqFPb2Ia9kh3nqqPyqj97eK',\n  'rastabrown':    '18hihO0qIECpVYUutLVtpj8wfZJSIbTmK',\n};\n\nconst ALL_KEYS = Object.keys(REF_MAP);\n\nconst item = $input.first().json;\nconst rawModel = item.Selected_Model ?? '';\nconst key = rawModel.toLowerCase().replace(/[\\s\\-_]/g, '');\n\nconst randomKey = ALL_KEYS[Math.floor(Math.random() * ALL_KEYS.length)];\nconst fileId = REF_MAP[key] ?? REF_MAP[randomKey];\nconst resolvedKey = REF_MAP[key] ? key : randomKey;\n\nreturn [{\n  json: {\n    ...item,\n    referenceImageUrl: DRIVE_BASE + fileId,\n    referenceImageKey: resolvedKey\n  }\n}];\n"
+        "jsCode": "const DRIVE_BASE = 'https://drive.google.com/uc?export=view&id=';\nconst REF_MAP = {\n  'classicblue':   '1i1Zt5ufXkmikG0_xal5aNOQVdWVf8OpF',\n  'classicred':    '1VQ5RSAF5NWNncwbaTHbFT65p-Fo9V2us',\n  'classicblack':  '1K3KbbiPDY4puYY66XKa4gUzILlZzfTtT',\n  'classicpurple': '1rdZQymdtr-5C9Bi__s9m9nKvDPqiIWQR',\n  'outbackblack':  '1Oo8a--aJW59XuJg6JmeHIzyReFPFYuMr',\n  'outbackblue':   '1FW14Bo2NKpI49TcNEwbfd6FlCXwNzyTZ',\n  'outbackgreen':  '1FLwh2S3M2g5DWjw0d0ox8Nwu0YFjD9mg',\n  'outbackred':    '1lP0SBZYq3VUkZ26Tvl0v1zSU0ww_XIlJ',\n  'banditsblack':  '1bZo8Wa_urThqSceTsO76FyGaEgiKCIRz',\n  'banditsblue':   '1z1xi59K6YeHVzM6Qfr_7VS2plVg2bgth',\n  'banditscamo':   '1wHsYsspQJlwEk0mBN3C0mWE3OmPYaw_F',\n  'banditsgreen':  '11AmEBk_4SSh_wL9fQaC_FiTjnVCdgj3L',\n  'rastared':      '1zFdvD2l82rqFPb2Ia9kh3nqqPyqj97eK',\n  'rastabrown':    '18hihO0qIECpVYUutLVtpj8wfZJSIbTmK',\n};\nconst ALL_KEYS = Object.keys(REF_MAP);\n\nconst item = $input.first().json;\nconst rawModels = (item.Selected_Model ?? '').split(',').map(s => s.trim()).filter(Boolean);\nconst models = rawModels.length > 0 ? rawModels : [''];\n\nconst urls = [];\nconst keys = [];\nfor (const rawModel of models) {\n  const key = rawModel.toLowerCase().replace(/[\\s\\-_]/g, '');\n  const randomKey = ALL_KEYS[Math.floor(Math.random() * ALL_KEYS.length)];\n  const fileId = REF_MAP[key] ?? REF_MAP[randomKey];\n  const resolvedKey = REF_MAP[key] ? key : randomKey;\n  urls.push(DRIVE_BASE + fileId);\n  keys.push(resolvedKey);\n}\n\nreturn [{\n  json: {\n    ...item,\n    referenceImageUrl: urls[0],\n    referenceImageKey: keys[0],\n    referenceImageUrls: urls,\n    referenceImageKeys: keys,\n    referenceCount: urls.length\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -267,22 +253,8 @@
     },
     {
       "parameters": {
-        "amount": 30
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        928,
-        256
-      ],
-      "id": "c2e63207-b2a9-4be5-8a16-f29d2725ffc8",
-      "name": "wait",
-      "webhookId": "4c9f125a-945d-46d9-94f0-5b2875ca2c1a"
-    },
-    {
-      "parameters": {
         "method": "PUT",
-        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/values/approved_content!L{{ $('Read Approved Content').item.json.row_number }}?valueInputOption=RAW",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/values/approved_content!K{{ $('Pick Caption').item.json._row_index }}\n?valueInputOption=RAW",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
@@ -293,17 +265,213 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1552,
-        256
+        1296,
+        240
       ],
       "id": "e133f839-11bb-4eae-a6d6-f51b4dfa19fb",
-      "name": "HTTP Request",
+      "name": "Mark Caption Used",
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "6jiX4Fd5CnCkiCBH",
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 264475580,
+          "mode": "list",
+          "cachedResultName": "image_log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=264475580"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $now.toISO() }}",
+            "Caption": "={{ $('Pick Caption').item.json.Caption }}",
+            "Vibe": "={{ $('Pick Caption').item.json.Vibe }}",
+            "Visual_Anchor": "={{ $('Pick Caption').item.json.Visual_Anchor }}",
+            "Selected_Model": "={{ $('Pick Caption').item.json.Selected_Model }}\n",
+            "Reference_Image": "={{ $('Lookup Reference Image').item.json.referenceImageKey }}\n",
+            "Prompt": "={{ $('Parse Prompt').item.json.prompt }}",
+            "Drive_File_ID": "={{ $('Upload to Drive').item.json.id }}\n",
+            "Drive_URL": "={{ $('Upload to Drive').item.json.webViewLink }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Vibe",
+              "displayName": "Vibe",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Visual_Anchor",
+              "displayName": "Visual_Anchor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Selected_Model",
+              "displayName": "Selected_Model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reference_Image",
+              "displayName": "Reference_Image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prompt",
+              "displayName": "Prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Drive_File_ID",
+              "displayName": "Drive_File_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Drive_URL",
+              "displayName": "Drive_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1136,
+        240
+      ],
+      "id": "dcf27081-afb8-47cb-b9eb-886c15c8e10a",
+      "name": "image_log",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ef1c1c7b-d04b-46e7-ab3a-53e92147e655",
+              "leftValue": "={{ $json.data.resultJson }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        368,
+        256
+      ],
+      "id": "3a878346-4c5b-44c2-a633-63c4753a0350",
+      "name": "Is Result Ready?"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        256
+      ],
+      "id": "5280a0ae-74bb-4df9-aff6-c328d3fa45a5",
+      "name": "Wait Before First Poll",
+      "webhookId": "82e8b38e-8dce-41e9-866c-8fc1ce1a4ba1"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        336
+      ],
+      "id": "8bc96a60-cefb-4fe6-af69-e26562c5ec47",
+      "name": "Wait Before Retry",
+      "webhookId": "e71c76f1-6617-4aee-9224-038de23107ca"
     }
   ],
   "pinData": {},
@@ -367,18 +535,7 @@
       "main": [
         [
           {
-            "node": "Wait for Image",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait for Image": {
-      "main": [
-        [
-          {
-            "node": "Fetch Image Result ",
+            "node": "Wait Before First Poll",
             "type": "main",
             "index": 0
           }
@@ -389,7 +546,7 @@
       "main": [
         [
           {
-            "node": "wait",
+            "node": "Download Image",
             "type": "main",
             "index": 0
           }
@@ -411,7 +568,7 @@
       "main": [
         [
           {
-            "node": "Extract Image URL",
+            "node": "Is Result Ready?",
             "type": "main",
             "index": 0
           }
@@ -440,31 +597,71 @@
         ]
       ]
     },
-    "wait": {
-      "main": [
-        [
-          {
-            "node": "Download Image",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Upload to Drive": {
       "main": [
         [
           {
-            "node": "HTTP Request",
+            "node": "image_log",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "HTTP Request": {
+    "Mark Caption Used": {
       "main": [
         []
+      ]
+    },
+    "image_log": {
+      "main": [
+        [
+          {
+            "node": "Mark Caption Used",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Result Ready?": {
+      "main": [
+        [
+          {
+            "node": "Extract Image URL",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait Before Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before First Poll": {
+      "main": [
+        [
+          {
+            "node": "Fetch Image Result ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Retry": {
+      "main": [
+        [
+          {
+            "node": "Wait Before First Poll",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     }
   },
@@ -474,7 +671,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "bd00aa79-965b-4b47-885a-5db000aa4eda",
+  "versionId": "e7ffb42f-1a9d-4351-900a-c4c9432d3f6b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "8f5f556501a1bc089acc180bf8210118b142ca69e9a04b407b5e834f5e047cd4"

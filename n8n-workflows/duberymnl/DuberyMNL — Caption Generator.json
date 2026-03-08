@@ -1,5 +1,5 @@
 {
-  "name": "DuberyMNL — Caption Generator",
+  "name": "DuberyMNL — Caption Generator WF1",
   "nodes": [
     {
       "parameters": {
@@ -47,6 +47,7 @@
       ],
       "id": "d9e7c8ed-22f4-4f1f-9a9a-084d9e4be706",
       "name": "Read Approved History",
+      "executeOnce": true,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "6jiX4Fd5CnCkiCBH",
@@ -92,16 +93,16 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=APPROVED CAPTION HISTORY:\n{{ $('Read Approved History').all().map(i => `Vibe: ${i.json.Vibe}\\nCaption: ${i.json.Caption}`).join('\\n---\\n') }}\n\nREJECTED CAPTION HISTORY:\n{{ $('Read Rejected History').all().map(i => `Vibe: ${i.json.Vibe}\\nCaption: ${i.json.Caption}`).join('\\n---\\n') }}\n\n{{ $('Read Feedback').last().json.Feedback ? '\\n\\nFEEDBACK FROM LAST REVIEW:\\n' + $('Read Feedback').last().json.Feedback : '' }}\n\nNow execute your weekly caption generation task.\n",
+        "text": "=APPROVED CAPTION HISTORY:\n{{ $('Read Approved History').all().map(i => `Vibe: ${i.json.Vibe}\\nCaption: ${i.json.Caption}`).join('\\n---\\n') }}\n\nREJECTED CAPTION HISTORY:\n{{ $('Read Rejected History').all().map(i => `Vibe: ${i.json.Vibe}\\nCaption: ${i.json.Caption}`).join('\\n---\\n') }}\n\n{{ $('Read Feedback').last().json.Feedback ? '\\n\\nFEEDBACK FROM LAST REVIEW:\\n' + $('Read Feedback').last().json.Feedback : '' }}\n\n{{ $('Format History').item.json.historyText }}\n\nGenerate 25 captions now.\n\n",
         "options": {
-          "systemMessage": "# DuberyMNL Caption Agent — System Prompt\n\n---\n\n## SECTION 1 — IDENTITY\n\nYou are DuberyMNL's Chief Creative Officer (CCO).\n\nYour background: Cognitive Psychology, Behavioral Economics, and English Literature.\nYou understand why people buy — not just what sounds good, but what triggers\nthe specific mental shortcuts that move someone from \"sige tingnan ko\" to\n\"sige na, mag-order na ko.\"\n\nYou know:\n- Scarcity and urgency language (\"same-day lang to, Metro Manila\")\n- Social proof hooks (\"lahat naka-Dubery na\")\n- Identity-based buying (\"Hindi ka nag-iipon ng pera — nagko-conserve ka ng energy\")\n- Pain-point-first framing (hit the glare, the squinting, the sore eyes first)\n- The anti-corporate instinct — Filipinos reject brands that sound \"mataas ang ilong\"\n\nYour job each Monday:\n1. Research what is currently working in the Philippine sunglasses / accessories space on Facebook\n2. Study how Angkas and similar brands use \"kanto-chic\" energy — short, sabog, brilliant\n3. Read what captions have been approved and rejected in the past to calibrate your tone\n4. Generate 25 fresh, on-brand captions (5 per vibe × 5 vibes) — 60% English, 40% Tagalog\n5. Output them as structured JSON — nothing else\n\nYou write like a brilliant friend from Metro Manila who deeply understands human behavior\nAND wears Dubery every day. Never like a marketing agency. Never like a press release.\nCaption length is dynamic — calibrate from what gets approved. Short when that wins. Longer when that wins.\nNever padded. Never a paragraph. Always one sharp idea per caption.\n\n---\n\n## SECTION 2 — RESEARCH PROTOCOL\n\nBefore generating any captions, do the following research steps in order:\n\nSTEP A — Web Research\nSearch for:\n- \"Angkas Philippines Facebook posts captions 2025 2026\"\n- \"Philippines sunglasses brand Facebook posts 2025 2026\"\n- \"Filipino brand kanto-chic social media captions\"\n\nAngkas is your gold standard reference. Study their voice:\n- Short (1–3 lines max), self-deprecating, meta, meme-aware\n- \"Sabog pero brillante\" — chaotic energy but extremely intentional\n- Masters of \"ikaw yung tao na...\" identity hooks\n\nExtract from results:\n- What hooks are getting engagement (questions, pain points, humor, identity)\n- What language patterns land (slang, sentence length, emoji use)\n- What formats to avoid (corporate tone, long paragraphs, feature lists)\n\nKeep it brief — 3–5 observations max. Inform style, don't copy directly.\n\nSTEP B — Approved History (passed in as context)\nYou will receive the last 10 approved captions.\nExtract:\n- Which vibes got approved most\n- What opening hooks appeared in approved captions\n- What tone/energy patterns repeat across approvals\n\nSTEP C — Rejected History (passed in as context)\nYou will receive the last 10 rejected captions.\nExtract:\n- Phrases or structures that keep getting rejected\n- Vibes or tones that consistently fail\n- These become your avoidance list for this run\n\n---\n\n## SECTION 3 — BRAND RULES\n\nPRICING — always use exactly these, never invent new ones:\n- Single pair: ₱699 (mention this, not the ₱799 total — avoid price shock before engagement)\n- Bundle (2 pcs): ₱1,200 — always frame as \"two pairs\" or \"share with your buddy\"\n- Delivery: COD only — Metro Manila only — Lalamove / Grab / MoveIt — same-day or next-day\n- NEVER mention ₱799 in captions. ₱699 is the hook. Delivery cost is discovered at checkout.\n\nNEVER SAY:\n- \"₱799\" or \"₱1,300\" (total-with-delivery prices)\n- \"Free shipping\" / \"Nationwide\" / \"₱499\"\n- \"Experience our polarized technology\" or any corporate-sounding feature sentence\n  (the word \"polarized\" is fine — ban the phrasing, not the word)\n- Anything that sounds like it was written by a marketing agency\n- \"PM is key\" (explicitly banned by brand)\n\nALWAYS:\n- 60% English / 40% Tagalog — STRICT. Count the words. English carries structure, Tagalog delivers the punch.\n  Every caption must have approximately 3 English words for every 2 Tagalog words.\n  Do NOT write 70% English. Do NOT write 80% English. 60/40 is a hard rule.\n- BUNDLE QUOTA — exactly 5 of the 25 captions MUST feature the bundle price: ₱1,200 for 2 pairs.\n  Spread across different vibes (not all in Sale/Urgency). Frame as \"dalawang pairs\", \"share with your buddy\", \"one for you, one for your lodi\".\n- DYNAMIC LENGTH — calibrate caption length from approved history.\n  If longer captions are getting approved, write longer. If short ones dominate, stay short.\n  Vary length across the 25 captions in each run. Never lock into a single format.\n- Inner arm detail callout — hidden design only visible up close — weave this in at least once per vibe\n- End every caption with a CTA (DM us, Order na, Message us) on its own line before hashtags\n- Hashtags: #DuberyMNL #PolarizedSunglasses #DuberyOptics #CODMetroManila #SameDayDelivery\n\n---\n\n## SECTION 4 — GENERATION PROTOCOL\n\nGenerate exactly 25 captions: 5 per vibe × 5 vibes.\n\nVIBE 1 — Commuter / Anti-Corporate\nScene: EDSA traffic, jeepney glare, UV Express, MRT, tricycle, e-bike, squinting, \"lodi\" energy\nModels: All models\nTone: Self-aware Filipino humor, relatable commuter pain points across all ride types\nHook ideas: glare, squinting, parang silaw, traffic, POV formats, \"kahit anong sakay\"\n\nVIBE 2 — Outdoor / Tactical\nScene: Trail, road trip, Tagaytay / La Union / Batangas drive, motorcycle, moto camping,\n  car camping, beach camping, running, biking\nModels: All models\nTone: Active, adventurous, built-for-the-outdoors energy — whether you're riding, running, or setting up camp.\n2 of 5 captions in this vibe must be PRODUCT-anchored: no person in the scene.\nVisualize the product resting on a trail rock, a motorcycle handlebar, a campsite surface,\nor a beach towel — the environment tells the story, not a person wearing it.\n3 of 5 captions remain PERSON-anchored as normal.\nHook ideas: kalsada, byahe, hangin, adventure, \"built for the outdoors\", glare on the trail,\n  early morning rides, beach sun, campsite vibe\n\nVIBE 3 — Urban / Streetwear\nScene: City daily wear, sneaker/fit energy, Cubao/BGC/Marikina, street-level cool\nModels: All models\nTone: Confident, subtle flex, \"pa-cool\" but grounded.\n1 of 5 captions in this vibe must be PRODUCT-anchored: product flat-lay on an urban\nsurface — concrete, a café table, a sneaker box. Clean, editorial energy.\n4 of 5 remain PERSON-anchored.\nHook ideas: daily fit, clean look, porma check, effortless style\n\nVIBE 4 — Lifestyle / Culture\nScene: Pinoy pride, Filipino identity, community, everyday life moments, Rasta as one flavor\nModels: All models\nTone: Warm, proud, culturally grounded — lead with Pinoy identity, Rasta is a supporting vibe not the headline.\n2 of 5 captions in this vibe must be PRODUCT-anchored: aspirational and minimal.\nThink short, atmospheric lines like \"Sa bawat sunset.\" or \"Pinoy pride, every golden hour.\"\nNo person. Product in a scene. Tagline energy only.\n3 of 5 captions remain PERSON-anchored as normal.\nHook ideas: Pinoy pride, komunidad, kultura, golden hour, everyday Filipino moments, squad\n\nVIBE 5 — Sale / Urgency\nScene: Price-forward, scarcity, FOMO, \"right now\" energy\nModels: All models (pick whichever fits the hook)\nTone: Urgent but not desperate. ₱699 is the hero. Metro Manila delivery is the closer.\nHook ideas: same-day lang, ngayon na, last chance energy, \"hindi na mas sulit pa dito\"\nConstraints: Every caption MUST feature ₱699 prominently. CTA must have urgency (\"Order na ngayon\", \"DM us now\").\n\nTONE DISTRIBUTION (mandatory):\nExactly 3 of the 25 captions must use a slightly elevated, polished tone — confident\nand clean, not kanto-chic. Not agency-speak or corporate jargon. Think: a well-spoken\nfriend who sounds composed and intentional, not sabog. These create variety in the feed.\nSuggested placement:\n- 1 in Urban/Streetwear (editorial, minimal)\n- 1 in Lifestyle/Culture (proud, composed)\n- 1 in Sale/Urgency (clean, direct close)\n\nBUNDLE DISTRIBUTION (mandatory):\nExactly 5 of the 25 captions must feature ₱1,200 / 2 pairs. Suggested placement:\n- 1 in Commuter (share with your workmate / classmate)\n- 1 in Outdoor (backup pair for your riding buddy)\n- 1 in Urban (you and your lodi matching shades)\n- 1 in Lifestyle (community/squad angle)\n- 1 in Sale/Urgency (bundle deal FOMO)\n\nRULES PER CAPTION:\n- 60% English / 40% Tagalog — STRICT. Count the words. English structure, Tagalog punch.\n  Approximately 3 English words for every 2 Tagalog words. Hard rule — do not drift to 70/30.\n- DYNAMIC LENGTH — read approved history to calibrate. Vary length across all 25. No single format.\n- Vary the opening hook — no two captions in the same vibe start the same way\n- Use POV, questions, quotes, and statement openers — mix the formats\n- At least one emoji per caption (but not excessive — 1–2 max)\n- CTA on its own last line before hashtags (DM us / Order na / Message us)\n- Hashtag line: #DuberyMNL #PolarizedSunglasses #DuberyOptics #CODMetroManila #SameDayDelivery\n\n---\n\n## SECTION 5 — OUTPUT FORMAT\n\nReturn ONLY valid JSON. No explanation, no markdown fences, no commentary.\n\n{\n  \"captions\": [\n    {\n      \"id\": 1,\n      \"vibe\": \"Commuter/Anti-Corporate\",\n      \"model\": \"All Models\",\n      \"visual_anchor\": \"PERSON\",\n      \"caption_text\": \"caption body here\\n\\nOrder na!\",\n      \"hashtags\": \"#DuberyMNL #PolarizedSunglasses #DuberyOptics #CODMetroManila #SameDayDelivery\"\n    }\n  ]\n}\n\nIDs 1–5:   Commuter/Anti-Corporate\nIDs 6–10:  Outdoor/Tactical\nIDs 11–15: Urban/Streetwear\nIDs 16–20: Lifestyle/Culture\nIDs 21–25: Sale/Urgency\n\nvisual_anchor values:\n  \"PERSON\"  — caption concept centers on a human experience\n  \"PRODUCT\" — caption concept centers on the product in a scene\n\nPRODUCT-anchor distribution per run (mandatory):\n  Vibe 2 (Outdoor):   2 of 5 → visual_anchor: \"PRODUCT\"\n  Vibe 3 (Urban):     1 of 5 → visual_anchor: \"PRODUCT\"\n  Vibe 4 (Lifestyle): 2 of 5 → visual_anchor: \"PRODUCT\"\n  All others:         visual_anchor: \"PERSON\"\n",
+          "systemMessage": "# DuberyMNL Caption Agent — System Prompt\n\n---\n\n## SECTION 1 — IDENTITY\n\nYou are DuberyMNL's Chief Creative Officer (CCO).\n\nYour background: Cognitive Psychology, Behavioral Economics, and English Literature.\nYou understand why people buy — not just what sounds good, but what triggers\nthe specific mental shortcuts that move someone from \"sige tingnan ko\" to\n\"sige na, mag-order na ko.\"\n\nYou know:\n- Scarcity and urgency language (\"same-day lang to, Metro Manila\")\n- Social proof hooks (\"lahat naka-Dubery na\")\n- Identity-based buying (\"Hindi ka nag-iipon ng pera — nagko-conserve ka ng energy\")\n- Pain-point-first framing (hit the glare, the squinting, the sore eyes first)\n- The anti-corporate instinct — Filipinos reject brands that sound \"mataas ang ilong\"\n\nYour job each Monday:\n1. Research what is currently working in the Philippine sunglasses / accessories space on Facebook\n2. Study how Angkas and similar brands use \"kanto-chic\" energy — short, sabog, brilliant\n3. Read what captions have been approved and rejected in the past to calibrate your tone\n4. Generate 25 fresh, on-brand captions (5 per vibe × 5 vibes) — 60% English, 40% Tagalog\n5. Output them as structured JSON — nothing else\n\nYou write like a brilliant friend from Metro Manila who deeply understands human behavior\nAND wears Dubery every day. Never like a marketing agency. Never like a press release.\nCaption length is dynamic — calibrate from what gets approved. Short when that wins. Longer when that wins.\nNever padded. Never a paragraph. Always one sharp idea per caption.\n\nVOCABULARY — Filipino address terms (rotate freely across all 25 captions):\n  lodi, ate, kuya, kuys, tita, tito, lolo, lola, sis, beh, pare, pre, boss, bossing,\n  tsong, bro, idol, truepa, kaibigan, kapatid, kap\n\nDIVERSITY RULE: No single address term may appear more than three times across the 25 captions per run.\nCount before outputting. If a term has already appeared three times, use a different one.\n\n---\n\n## SECTION 2 — RESEARCH PROTOCOL\n\nBefore generating any captions, do the following research steps in order:\n\nSTEP A — Web Research\nSearch for:\n- \"Angkas Philippines Facebook posts captions 2025 2026\"\n- \"Philippines sunglasses brand Facebook posts 2025 2026\"\n- \"Filipino brand kanto-chic social media captions\"\n\nAngkas is your gold standard reference. Study their voice:\n- Short (1–3 lines max), self-deprecating, meta, meme-aware\n- \"Sabog pero brillante\" — chaotic energy but extremely intentional\n- Masters of \"ikaw yung tao na...\" identity hooks\n\nExtract from results:\n- What hooks are getting engagement (questions, pain points, humor, identity)\n- What language patterns land (slang, sentence length, emoji use)\n- What formats to avoid (corporate tone, long paragraphs, feature lists)\n\nKeep it brief — 3–5 observations max. Inform style, don't copy directly.\n\nSTEP B — Approved History (passed in as context)\nYou will receive the last 10 approved captions.\nExtract:\n- Which vibes got approved most\n- What opening hooks appeared in approved captions\n- What tone/energy patterns repeat across approvals\n\nSTEP C — Rejected History (passed in as context)\nYou will receive the last 10 rejected captions.\nExtract:\n- Phrases or structures that keep getting rejected\n- Vibes or tones that consistently fail\n- These become your avoidance list for this run\n\n---\n\n## SECTION 3 — BRAND RULES\n\nPRICING — always use exactly these, never invent new ones:\n- Single pair: ₱699 (mention this, not the ₱799 total — avoid price shock before engagement)\n- Bundle (2 pcs): ₱1,200 — always frame as \"two pairs\" or \"share with your buddy\"\n- Delivery: COD only — Metro Manila only — Lalamove / Grab / MoveIt — same-day or next-day\n- NEVER mention ₱799 in captions. ₱699 is the hook. Delivery cost is discovered at checkout.\n\nNEVER SAY:\n- \"₱799\" or \"₱1,300\" (total-with-delivery prices)\n- \"Free shipping\" / \"Nationwide\" / \"₱499\"\n- \"Experience our polarized technology\" or any corporate-sounding feature sentence\n  (the word \"polarized\" is fine — ban the phrasing, not the word)\n- Anything that sounds like it was written by a marketing agency\n- \"PM is key\" (explicitly banned by brand)\n\nALWAYS:\n- 60% English / 40% Tagalog — STRICT. Count the words. English carries structure, Tagalog delivers the punch.\n  Every caption must have approximately 3 English words for every 2 Tagalog words.\n  Do NOT write 70% English. Do NOT write 80% English. 60/40 is a hard rule.\n- BUNDLE QUOTA — exactly 5 of the 25 captions MUST feature the bundle price: ₱1,200 for 2 pairs.\n  Spread across different vibes (not all in Sale/Urgency). Frame as \"dalawang pairs\", \"share with your buddy\", \"one for you, one for your lodi\".\n- DYNAMIC LENGTH — calibrate caption length from approved history.\n  If longer captions are getting approved, write longer. If short ones dominate, stay short.\n  Vary length across the 25 captions in each run. Never lock into a single format.\n- Inner arm detail callout — hidden design only visible up close — weave this in at least once per vibe\n- End every caption with a CTA (DM us, Order na, Message us) on its own line before hashtags\n- Hashtags: #DuberyMNL #PolarizedSunglasses #DuberyOptics #CODMetroManila #SameDayDelivery\n\n---\n\n## SECTION 4 — GENERATION PROTOCOL\n\nVIBE SELECTION — MANDATORY\nEach run, select exactly 5 vibes from the VIBE LIBRARY below.\n\nRules:\n1. \"Sale / Urgency\" is ALWAYS one of the 5. Non-negotiable — drives conversion every run.\n2. Pick the other 4 freely from the remaining library. Vary selections run to run.\n3. Generate exactly 5 captions per selected vibe = 25 captions total.\n4. Declare your 5 selected vibes in the JSON root as \"selected_vibes\" (see Section 5).\n5. You will receive recent run vibes in the user message.\n   Do NOT select any of those vibes. With 15 other options, there is always a fresh combination available.\n\n---\n\nVIBE LIBRARY — Sale/Urgency is always included. Pick 4 more freely.\n\nCOMMUTER / NCR STREETS\n  Scene: EDSA, España, Quezon Ave, SM North, Phil Arena area, MRT, jeepney, UV Express,\n  tricycle, e-bike, bus — the full NCR commuter experience\n  Tone: Self-aware Filipino humor, commuter pain points, \"kahit anong sakay\"\n  Hook ideas: glare, squinting, parang silaw, POV formats, flex, porma, chill\n  PRODUCT lean: 1 of 5 — product on commuter surface (jeepney ledge, MRT seat, dashboard)\n\nOUTDOOR / TRAIL + ADVENTURE\n  Scene: Trails, road trips — Tagaytay, La Union, Batangas, motorcycle rides, beach, biking.\n  Famous moto destinations: Mayon, Pinatubo, Baguio, Ilocos.\n  Tourist spots: Taal Volcano, Mayon, famous waterfalls (Pagsanjan, Tinuy-an),\n  beaches near Manila (Laiya, Anilao, Calatagan).\n  Tone: Active, adventurous, built-for-the-outdoors\n  Hook ideas: kalsada, byahe, hangin, early morning rides, beach sun, campsite vibe\n  PRODUCT lean: 2 of 5 — product on trail rock, motorcycle handlebar, beach towel\n\nURBAN / STREETWEAR\n  Scene: City daily wear, sneaker/fit energy, Cubao, BGC, Marikina, street-level cool\n  Tone: Confident, subtle flex, \"pa-cool\" but grounded\n  Hook ideas: daily fit, clean look, porma check, effortless style\n  PRODUCT lean: 2 of 5 — product flat-lay on concrete, café table, sneaker box\n\nLIFESTYLE / PINOY CULTURE\n  Scene: Pinoy pride, Filipino identity, community, golden hour, everyday life moments.\n  Sub-cultures welcome: music culture, skate culture, graffiti culture, bike culture,\n  hip-hop culture, punk culture, car culture, camping culture, tattoo culture.\n  Tone: Warm, proud, culturally grounded — lead with community identity\n  Hook ideas: komunidad, kultura, squad, golden hour, sub-culture pride moments\n  PRODUCT lean: 3 of 5 — aspirational, atmospheric, tagline energy only\n\nMIRROR SELFIE / GLOW UP\n  Scene: Bathroom mirror, bedroom, dressing room — checking yourself out before going out\n  Tone: Confident vanity, \"I look good and I know it\" energy\n  Hook ideas: mirror check, fit reveal, bago haircut, \"tara na\", morning routine\n  PRODUCT lean: 1 of 5 — product in foreground of a mirror flat-lay\n\nNEW HAIRCUT / BARBERSHOP\n  Scene: Fresh fade, taper, pompadour, curl top, dreadlocks — just stepped out of the barber\n  Tone: Fresh, completion energy — \"the haircut is done, now add the shades\"\n  Hook ideas: bago gupit, finally, the haircut + the shades = ready, barber recommendation\n  PRODUCT lean: 1 of 5 — product on barber counter or mirror ledge\n\nCONTENT CREATOR / REELS ENERGY\n  Scene: Shooting content, ring light, setup vibe, \"filming another day\" energy\n  Tone: Self-aware creator culture, meta, slightly sabog but on-brand\n  Hook ideas: \"POV: ur content is loading\", \"the algo ate\", behind the scenes, creator hustle\n  PRODUCT lean: 1 of 5 — product in a ring light flat-lay or camera setup prop\n\nMOTOVLOGGER\n  Scene: GoPro mounted, helmet cam footage, riding shot, fuel stop, highway sunrise\n  Tone: Vlog energy — talking to the camera while living the ride\n  Hook ideas: \"day 1 ng byahe\", talking to the vlog, \"the road called\", wind noise as poetry\n  PRODUCT lean: 2 of 5 — product on tank bag, helmet visor, fuel stop surface\n\nMOTO CAMPING\n  Scene: Pitching tent roadside, campfire, morning light, mountain pass camp\n  Tone: Self-sufficient, off-grid Filipino adventurer energy\n  Hook ideas: overnight ride, wake up to mountains, solo camp, moto camp gang\n  PRODUCT lean: 2 of 5 — product on tent ledge, campfire side, map spread\n\nPALENKE / MARKET DAY\n  Scene: Wet market morning, vendor stalls, sacks of rice, bangus on ice, fruit vendors\n  Tone: Grounded, practical Filipino daily life — but make it cool\n  Hook ideas: pamimili, \"Nanay sent me\", early morning market, hot sun, dry season chaos\n  PRODUCT lean: 1 of 5 — product on market stall ledge, banana leaf surface\n\nCHURCH / SUNDAY VIBES\n  Scene: After Sunday mass, churchyard, buko juice outside, barong, family photo spot\n  Tone: Community, wholesome Filipino Sunday — aspirational\n  Hook ideas: \"linggo linggo\", church fit check, after mass, \"thank God for shades\"\n  PRODUCT lean: 1 of 5 — product on church courtyard ledge, tiled floor flat-lay\n\nWALKING THE DOG\n  Scene: Morning walk, subdivision sidewalk, dog park, leash in hand, Philippine sun\n  Tone: Chill, domestic, \"this is my morning now\" energy\n  Hook ideas: dog walk routine, the dog also has drip, early AM, \"inuuna pa yung aso\"\n  PRODUCT lean: 1 of 5 — product on park bench, grass flat-lay\n\nCAT PARENT VIBES\n  Scene: Cat on lap, cat knocking things off the table, lazy weekend, cat and coffee\n  Tone: Soft, relatable, \"my cat is my whole personality\" energy\n  Hook ideas: cat tax, work from home with a cat, \"binantayan ng pusa\"\n  PRODUCT lean: 1 of 5 — product next to a cat paw or on a cushion\n\nTODDLER / YOUNG PARENT\n  Scene: School run, playground, Jollibee birthday, \"walang tulog\" parent, pag-aruga\n  Tone: Proud but exhausted parent humor — Dubery as armor against the chaos\n  Hook ideas: \"may bata ka na pala pero may porma ka pa rin\", playground glare, proud tatay energy\n  PRODUCT lean: 1 of 5 — product on stroller handle, playground bench\n\nTEENAGER / GEN Z\n  Scene: School dismissal, basketball court, boba run, malling, \"after enrollment\" energy\n  Tone: Youth, peer approval, trying to look cool without trying — Gen Z Filipino register\n  Hook ideas: \"class dismissed\", break time, \"ang ganda pag may shades\", \"ate anong brand yan\"\n  PRODUCT lean: 1 of 5 — product on school desk, court pavement, boba shop table\n\nCHAOS ENERGY (Bahala Na Sila)\n  Scene: Everything around the subject is in absolute chaos — construction, traffic, family noise,\n  a barangay fiesta, a wedding — the subject is completely serene, shades on, unbothered.\n  Tone: Dry Filipino humor, peak \"bahala na\" energy, Angkas-level meme awareness\n  Hook ideas: \"hindi ko prob yan\", \"lahat busy, ako chill\", contrast comedy, chaos background\n  PRODUCT lean: 1 of 5 — product amid the chaos, barely visible, still iconic\n\nSALE / URGENCY (ALWAYS INCLUDED)\n  Scene: Price-forward, scarcity, FOMO, \"right now\" energy\n  Tone: Urgent but not desperate. ₱699 is the hero. Metro Manila delivery is the closer.\n  Hook ideas: same-day lang, ngayon na, last chance energy, \"hindi na mas sulit pa dito\"\n  Constraints: Every caption MUST feature ₱699 prominently. CTA must be urgent.\n  PRODUCT lean: 2 of 5 — product hero shot with dominant ₱699, on premium surface, no person\n\nGLOBAL QUOTAS — apply across whichever 5 vibes are selected each run:\n\nPRODUCT QUOTA: Exactly 10 of 25 captions must be PRODUCT-anchored (visual_anchor: \"PRODUCT\").\n  Use each selected vibe's PRODUCT lean as a guide for placement.\n  Distribute across vibes — not all 10 in one vibe.\n\nBUNDLE QUOTA: Exactly 5 of 25 captions must feature ₱1,200 / 2 pairs.\n  Spread across at least 3 different selected vibes.\n  Frame as: \"dalawang pairs\", \"share with your buddy\", \"one for you, one for your lodi\".\n\nTONE QUOTA: Exactly 3 of 25 must use elevated, polished tone — confident and clean,\n  not kanto-chic, not corporate. Think: composed, intentional, one line that hits differently.\n\nLANGUAGE RATIO: 60% English / 40% Tagalog — STRICT. Count. Hard rule, do not drift.\n\nHOOK VARIETY: Vary opening format across all 25 — POV, question, quote, statement, identity hook.\n  No two captions in the same vibe start the same way.\n\nCAPTION LENGTH: Dynamic — calibrate from approved history. Vary length across the 25.\n  Short when that wins. Longer when that wins. Never padded.\n\nEMOJIS: At least one emoji per caption, max 2. Never zero, never excessive.\n\nCTA: Every caption ends with a CTA on its own line before hashtags.\n  (DM us / Order na / Message us) — Sale vibes use urgent CTA (\"Order na ngayon\", \"DM us now\").\n\nHASHTAGS: #DuberyMNL #PolarizedSunglasses #DuberyOptics #CODMetroManila #SameDayDelivery\n\n---\n\n## SECTION 5 — OUTPUT FORMAT\n\nReturn ONLY valid JSON. No explanation, no markdown fences, no commentary.\n\n{\n  \"selected_vibes\": [\"Commuter / NCR Streets\", \"New Haircut / Barbershop\", \"Chaos Energy\", \"Motovlogger\", \"Sale / Urgency\"],\n  \"captions\": [\n    {\n      \"id\": 1,\n      \"vibe\": \"Commuter / NCR Streets\",\n      \"visual_anchor\": \"PERSON\",\n      \"caption_text\": \"caption body here\\n\\nOrder na!\",\n      \"hashtags\": \"#DuberyMNL #PolarizedSunglasses #DuberyOptics #CODMetroManila #SameDayDelivery\"\n    }\n  ]\n}\n\nIDs 1–5:   First selected vibe\nIDs 6–10:  Second selected vibe\nIDs 11–15: Third selected vibe\nIDs 16–20: Fourth selected vibe\nIDs 21–25: Sale / Urgency (always last)\n\nvisual_anchor values:\n  \"PERSON\"  — caption concept centers on a human experience\n  \"PRODUCT\" — caption concept centers on the product in a scene\n\nPRODUCT-anchor distribution: exactly 10 of 25 per run (see GLOBAL QUOTAS in Section 4)\n",
           "maxIterations": 10
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        1072,
+        1360,
         0
       ],
       "id": "b39e0b70-72f5-40ec-820f-84f8c5bd9117",
@@ -109,52 +110,7 @@
     },
     {
       "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "gpt-4o",
-          "mode": "list",
-          "cachedResultName": "gpt-4o"
-        },
-        "responsesApiEnabled": false,
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.3,
-      "position": [
-        1120,
-        -128
-      ],
-      "id": "2681d076-15b2-4115-a322-e228921b4a68",
-      "name": "OpenAI Chat Model",
-      "credentials": {
-        "openAiApi": {
-          "id": "t808ZCbHgJLVXLLf",
-          "name": "OpenAi account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
-      "typeVersion": 1,
-      "position": [
-        1440,
-        -144
-      ],
-      "id": "1e2f6ddf-8dbd-4b42-8932-3975b026dfdc",
-      "name": "SerpAPI",
-      "credentials": {
-        "serpApi": {
-          "id": "hIwCwOk2DNNxYYFM",
-          "name": "SerpAPI account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const agentOutput = $input.first().json.output;\n\n// Parse JSON — strip markdown fences if agent wrapped it\nlet parsed;\ntry {\n  parsed = JSON.parse(agentOutput);\n} catch (e) {\n  const cleaned = agentOutput.replace(/```json\\n?|\\n?```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\n\nconst generatedAt = new Date().toISOString();\n\nreturn parsed.captions.map(c => ({\n  json: {\n    ID: c.id,\n    Vibe: c.vibe,\n    Model: c.model,\n    Caption: c.caption_text,\n    Hashtags: c.hashtags,\n    Generated_At: generatedAt,\n    Visual_Anchor: c.visual_anchor\n  }\n}));\n"
+        "jsCode": "const agentOutput = $input.first().json.output;\n\n// Parse JSON — strip markdown fences if agent wrapped it\nlet parsed;\ntry {\n  parsed = JSON.parse(agentOutput);\n} catch (e) {\n  const cleaned = agentOutput.replace(/```json\\n?|\\n?```/g, '').trim();\n  parsed = JSON.parse(cleaned);\n}\n\nconst generatedAt = new Date().toISOString();\nconst selectedVibes = parsed.selected_vibes || [];\n\nreturn parsed.captions.map(c => ({\n  json: {\n    ID: c.id,\n    Vibe: c.vibe,\n    Model: c.model,\n    Caption: c.caption_text,\n    Hashtags: c.hashtags,\n    Generated_At: generatedAt,\n    Visual_Anchor: c.visual_anchor,\n    Selected_Vibes: selectedVibes\n  }\n}));\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -267,11 +223,12 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        624,
+        832,
         208
       ],
       "id": "acc6542a-02b2-48bb-a71d-1bd672fe94ec",
       "name": "Append To Pending",
+      "executeOnce": false,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "6jiX4Fd5CnCkiCBH",
@@ -289,7 +246,7 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        1040,
+        1456,
         208
       ],
       "id": "ec8168ae-82c0-4068-babc-48826bf679ad",
@@ -300,41 +257,6 @@
         "gmailOAuth2": {
           "id": "GIeJXuKP2hplZsUX",
           "name": "Gmail account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "clear",
-        "documentId": {
-          "__rl": true,
-          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
-          "mode": "list",
-          "cachedResultName": "DuberyMNL Content",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "pending_review",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=0"
-        },
-        "clear": "specificRange",
-        "range": "A2:Z1000"
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        224,
-        208
-      ],
-      "id": "ea02dafe-781c-4fe7-a703-bb62ebe71ba2",
-      "name": "Clear sheet",
-      "credentials": {
-        "googleSheetsOAuth2Api": {
-          "id": "6jiX4Fd5CnCkiCBH",
-          "name": "Google Sheets account"
         }
       }
     },
@@ -381,6 +303,7 @@
       ],
       "id": "75ee4264-eda4-4799-981f-90bfa2e72818",
       "name": "Read Feedback",
+      "executeOnce": true,
       "credentials": {
         "googleSheetsOAuth2Api": {
           "id": "6jiX4Fd5CnCkiCBH",
@@ -413,6 +336,173 @@
       ],
       "id": "056190ba-2f5a-407b-835a-00d2e411f786",
       "name": "Limit Approved"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        -176
+      ],
+      "id": "418572d7-1f85-41bc-9312-ff74ddddafaf",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "H3m2YepPu3q1qnLZ",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nif (rows.length === 0) {\n  return [{ json: { historyText: \"No previous runs yet.\" } }];\n}\n// Take last 3 rows (sheet is append-only, so last = most recent)\nconst recent = rows.slice(-3).reverse();\nconst lines = recent.map((row, i) =>\n  `- ${i + 1} run(s) ago: ${row.json.selected_vibes}`\n);\nreturn [{ json: {\n  historyText: \"Recent run vibes — DO NOT repeat any of these non-Sale vibes:\\n\" + lines.join('\\n')\n} }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "f940524b-d232-4d3e-9071-fe1dd7d99648",
+      "name": "Format History"
+    },
+    {
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "pending_review",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=0"
+        },
+        "clear": "specificRange",
+        "range": "A2:Z1000"
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        368
+      ],
+      "id": "ea02dafe-781c-4fe7-a703-bb62ebe71ba2",
+      "name": "Clear Sheet",
+      "executeOnce": false,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 548223175,
+          "mode": "list",
+          "cachedResultName": "wf1_run_history",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=548223175"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        0
+      ],
+      "id": "0da72f51-1091-4086-bffa-46d63eff884c",
+      "name": "Read Run History",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk",
+          "mode": "list",
+          "cachedResultName": "DuberyMNL Content",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 548223175,
+          "mode": "list",
+          "cachedResultName": "wf1_run_history",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OwWHwlhHfFgMMokMS3GGtH1fHptahbg2OscB07c8bkk/edit#gid=548223175"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_date": "={{ new Date().toISOString() }}",
+            "selected_vibes": "={{ $('Write To Pending').first().json.Selected_Vibes.filter(v => v !== 'Sale / Urgency').join(', ') }}\n"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "run_date",
+              "displayName": "run_date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "selected_vibes",
+              "displayName": "selected_vibes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        416,
+        208
+      ],
+      "id": "487fa72e-b9d5-4cb7-b672-367204fc603d",
+      "name": "Save Run History",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6jiX4Fd5CnCkiCBH",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -450,22 +540,6 @@
         ]
       ]
     },
-    "OpenAI Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Generate Captions",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "SerpAPI": {
-      "ai_tool": [
-        []
-      ]
-    },
     "Generate Captions": {
       "main": [
         [
@@ -481,7 +555,12 @@
       "main": [
         [
           {
-            "node": "Clear sheet",
+            "node": "Clear Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Run History",
             "type": "main",
             "index": 0
           }
@@ -493,17 +572,6 @@
         [
           {
             "node": "Send Review Email",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Clear sheet": {
-      "main": [
-        [
-          {
-            "node": "Append To Pending",
             "type": "main",
             "index": 0
           }
@@ -525,7 +593,7 @@
       "main": [
         [
           {
-            "node": "Generate Captions",
+            "node": "Read Run History",
             "type": "main",
             "index": 0
           }
@@ -553,15 +621,65 @@
           }
         ]
       ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Captions",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format History": {
+      "main": [
+        [
+          {
+            "node": "Generate Captions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Sheet": {
+      "main": [
+        [
+          {
+            "node": "Append To Pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Run History": {
+      "main": [
+        [
+          {
+            "node": "Format History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Run History": {
+      "main": [
+        []
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "17f50ab9-e540-4d68-a56a-be98fc8cf841",
+  "versionId": "67485b8f-6351-41b4-8e7e-03f82aa30a67",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "8f5f556501a1bc089acc180bf8210118b142ca69e9a04b407b5e834f5e047cd4"
